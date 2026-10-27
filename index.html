@@ -1121,7 +1121,16 @@
             socket.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
                 if (msg.event === 'probe_complete') {
-                    alert(`Soil probe complete at ${msg.zone}!\nMoisture: ${msg.readings.moisture_pct}%\npH: ${msg.readings.ph_level}`);
+                    alert(
+                        `📡 [LoRa Packet Received at Base Station]\n` +
+                        `Location: ${msg.zone} (Tag ID ${msg.tag_id})\n` +
+                        `--------------------------------------\n` +
+                        `💧 Moisture: ${msg.readings.moisture_pct}%\n` +
+                        `🌡️ Soil Temp: ${msg.readings.temperature_c}°C (${msg.readings.temperature_f}°F)\n` +
+                        `🧪 pH Level: ${msg.readings.ph_level}\n` +
+                        `--------------------------------------\n` +
+                        `📶 LoRa RSSI: ${msg.lora_meta.rssi} | SNR: ${msg.lora_meta.snr}`
+                    );
                 }
             };
 
