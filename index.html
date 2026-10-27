@@ -3,297 +3,454 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Code Vision Studio</title>
+<title>Browser Computer Vision Studio</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<!-- jsQR: pure JavaScript QR decoder -->
+<!-- QR decoder -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-<style>body{font-family:'Inter',sans-serif}</style>
+<!-- AprilTag decoder: js-aruco2 (2.0.0 is the published version) + the tag36h11 dictionary -->
+<script src="https://cdn.jsdelivr.net/npm/js-aruco2@2.0.0/src/cv.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-aruco2@2.0.0/src/aruco.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-aruco2@2.0.0/src/dictionaries/apriltag_36h11.js"></script>
+<style>
+body{font-family:'Inter',sans-serif}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:rgba(15,23,42,.6)}
+::-webkit-scrollbar-thumb{background:rgba(51,65,85,.8);border-radius:4px}
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
 
-<header class="border-b border-slate-800 bg-slate-900/80 px-4 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+<header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
   <div class="flex items-center space-x-3">
-    <div class="p-2 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-indigo-400"><i class="fa-solid fa-qrcode text-xl"></i></div>
+    <div class="p-2 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-indigo-400"><i class="fa-solid fa-eye text-xl"></i></div>
     <div>
-      <h1 class="font-bold text-lg leading-none text-white">QR Code Studio</h1>
-      <p class="text-xs text-slate-400 mt-1">Detect and decode QR codes in the browser, with position, heading and distance</p>
+      <h1 class="font-bold text-lg leading-none text-white">JS Vision Studio</h1>
+      <p class="text-xs text-slate-400 mt-1">Real-time browser vision with AprilTag and QR detection</p>
     </div>
   </div>
   <div class="flex items-center space-x-3">
-    <div class="bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-1.5 text-xs font-mono">
-      FPS: <span id="fps" class="text-emerald-400 font-bold">0</span>
+    <div class="bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-1.5 flex items-center space-x-2 text-xs font-mono">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-slate-400">FPS:</span>
+      <span id="fps-counter" class="text-emerald-400 font-bold">0</span>
     </div>
-    <button id="cam-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-3.5 py-2 rounded-lg flex items-center space-x-2">
-      <i class="fa-solid fa-video"></i><span id="cam-text">Start Camera</span>
+    <button id="toggle-cam-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm px-3.5 py-2 rounded-lg flex items-center space-x-2 active:scale-95">
+      <i class="fa-solid fa-video"></i><span id="toggle-cam-text">Start Camera</span>
     </button>
-    <button id="flip-btn" title="Flip camera" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 p-2 rounded-lg">
-      <i class="fa-solid fa-camera-rotate"></i>
-    </button>
+    <button id="flip-cam-btn" title="Flip Camera" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/80 text-slate-300 p-2 rounded-lg active:scale-95"><i class="fa-solid fa-camera-rotate"></i></button>
   </div>
 </header>
 
-<main class="p-4 lg:p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-  <div class="lg:col-span-8 space-y-4">
-    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden aspect-video flex items-center justify-center">
-      <video id="video" autoplay playsinline class="hidden"></video>
-      <canvas id="canvas" class="w-full h-full object-contain"></canvas>
-      <div id="placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/95 text-center p-6">
-        <i class="fa-solid fa-video-slash text-2xl text-slate-500 mb-3"></i>
-        <p class="text-sm text-slate-300 font-semibold">Camera inactive</p>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm">Start the camera and show a QR code. Decoding runs locally in your browser.</p>
+<main class="flex-1 p-4 lg:p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+  <div class="lg:col-span-8 flex flex-col space-y-4">
+    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex justify-center items-center aspect-video min-h-[300px]">
+      <video id="webcam-video" autoplay playsinline muted class="hidden"></video>
+      <canvas id="output-canvas" class="w-full h-full object-contain cursor-crosshair"></canvas>
+      <div id="cam-placeholder" class="absolute inset-0 flex flex-col justify-center items-center bg-slate-900/95 text-slate-500 p-6 text-center">
+        <div class="w-16 h-16 rounded-full bg-slate-800/80 border border-slate-700 flex justify-center items-center mb-4 text-slate-400"><i class="fa-solid fa-video-slash text-2xl"></i></div>
+        <h3 class="font-semibold text-slate-300 mb-1">Camera Inactive</h3>
+        <p class="text-xs max-w-sm text-slate-400">Click <strong class="text-slate-200">Start Camera</strong> to enable live processing. All vision runs locally on your machine.</p>
+      </div>
+      <div id="flash-overlay" class="absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-300"></div>
+      <div class="absolute bottom-3 left-3 right-3 flex justify-between items-center bg-slate-950/80 backdrop-blur-md border border-slate-800/80 p-2 rounded-xl">
+        <div class="text-xs font-mono text-slate-400 px-2 flex items-center space-x-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-slate-500"></span><span id="status-text">Mode: Passthrough</span>
+        </div>
+        <button id="snapshot-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5">
+          <i class="fa-solid fa-camera"></i><span>Snapshot</span>
+        </button>
       </div>
     </div>
-    <div class="flex justify-between items-center text-xs font-mono text-slate-400">
-      <span id="status">QR codes found: 0</span>
-      <label class="flex items-center space-x-2 cursor-pointer text-slate-300 font-sans">
-        <i class="fa-solid fa-image"></i><span>Decode an image file</span>
-        <input id="file-input" type="file" accept="image/*" class="hidden">
-      </label>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2" id="mode-tabs">
+      <button data-mode="none" class="mode-tab bg-indigo-600 text-white border-indigo-500"><i class="fa-solid fa-eye"></i><span>Passthrough</span></button>
+      <button data-mode="grayscale" class="mode-tab"><i class="fa-solid fa-circle-half-stroke"></i><span>Threshold</span></button>
+      <button data-mode="edge" class="mode-tab"><i class="fa-solid fa-border-all"></i><span>Sobel Edge</span></button>
+      <button data-mode="colortrack" class="mode-tab"><i class="fa-solid fa-crosshairs"></i><span>Color Track</span></button>
+      <button data-mode="motion" class="mode-tab"><i class="fa-solid fa-person-walking"></i><span>Motion</span></button>
+      <button data-mode="apriltag" class="mode-tab"><i class="fa-solid fa-border-none"></i><span>AprilTag</span></button>
+      <button data-mode="qr" class="mode-tab"><i class="fa-solid fa-qrcode"></i><span>QR Code</span></button>
     </div>
   </div>
 
-  <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5">
-    <h2 class="font-bold text-sm uppercase text-slate-200"><i class="fa-solid fa-sliders text-indigo-400 mr-2"></i>Controls</h2>
-
-    <div class="space-y-1.5">
-      <label class="text-xs text-slate-300 font-medium">Physical QR size (cm, outer edge)</label>
-      <input id="qr-size" type="number" value="10" min="1" step="0.5" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm">
+  <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-6 shadow-xl">
+    <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+      <h2 class="font-bold text-slate-200 text-sm uppercase flex items-center space-x-2"><i class="fa-solid fa-sliders text-indigo-400"></i><span>CV Controls</span></h2>
+      <button id="reset-params-btn" class="text-xs text-slate-400 hover:text-indigo-400">Reset Default</button>
     </div>
 
-    <div class="space-y-1.5">
-      <div class="flex justify-between text-xs"><label class="text-slate-300 font-medium">Camera focal length (px)</label><span id="val-f" class="text-indigo-400 font-mono">900</span></div>
-      <input id="focal" type="range" min="300" max="2000" value="900" class="w-full accent-indigo-500">
-      <p class="text-xs text-slate-500">Calibrate: hold a code at a known distance and adjust until the reading matches.</p>
+    <div id="param-panel-none" class="param-panel space-y-4"><p class="text-xs text-slate-400">Showing the clean camera feed. Pick a mode below the video.</p></div>
+
+    <div id="param-panel-grayscale" class="param-panel space-y-4 hidden">
+      <div class="space-y-1.5"><div class="flex justify-between text-xs"><label class="text-slate-300 font-medium">Binarization Threshold</label><span id="val-threshold" class="text-indigo-400 font-mono">128</span></div>
+        <input type="range" id="param-threshold" min="0" max="255" value="128" class="w-full accent-indigo-500"></div>
+      <label class="flex items-center space-x-2 text-xs text-slate-300"><input type="checkbox" id="param-invert-thresh" class="w-4 h-4"><span>Invert Black/White</span></label>
     </div>
 
-    <div class="space-y-1.5">
-      <div class="flex justify-between text-xs"><label class="text-slate-300 font-medium">Downscale for speed</label><span id="val-d" class="text-indigo-400 font-mono">0.5x</span></div>
-      <input id="downscale" type="range" min="0.25" max="1" step="0.25" value="0.5" class="w-full accent-indigo-500">
+    <div id="param-panel-edge" class="param-panel space-y-4 hidden">
+      <div class="space-y-1.5"><div class="flex justify-between text-xs"><label class="text-slate-300 font-medium">Sobel Cutoff Intensity</label><span id="val-edge-cutoff" class="text-indigo-400 font-mono">50</span></div>
+        <input type="range" id="param-edge-cutoff" min="10" max="200" value="50" class="w-full accent-indigo-500"></div>
+      <label class="flex items-center space-x-2 text-xs text-slate-300"><input type="checkbox" id="param-edge-color" class="w-4 h-4"><span>Color Gradient Overlay</span></label>
     </div>
 
-    <div class="space-y-2">
-      <label class="flex items-center space-x-2 text-xs text-slate-300"><input id="show-trail" type="checkbox" checked class="w-4 h-4"><span>Draw center trail</span></label>
-      <label class="flex items-center space-x-2 text-xs text-slate-300"><input id="try-invert" type="checkbox" class="w-4 h-4"><span>Also try inverted codes (slower)</span></label>
-    </div>
-
-    <div>
-      <div class="flex justify-between items-center mb-2">
-        <h3 class="text-xs font-semibold text-slate-400 uppercase">Scan history</h3>
-        <button id="clear-btn" class="text-xs text-slate-400 hover:text-indigo-400">Clear</button>
+    <div id="param-panel-colortrack" class="param-panel space-y-4 hidden">
+      <div class="flex items-center space-x-3">
+        <input type="color" id="param-target-color" value="#ef4444" class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 p-0.5">
+        <span class="text-xs text-slate-400">Click the video to pick a target color.</span>
       </div>
-      <div id="history" class="space-y-2 text-xs max-h-72 overflow-y-auto">
-        <p class="text-slate-500">Nothing scanned yet</p>
-      </div>
+      <div class="space-y-1.5"><div class="flex justify-between text-xs"><label class="text-slate-300 font-medium">Color Distance Tolerance</label><span id="val-color-tolerance" class="text-indigo-400 font-mono">60</span></div>
+        <input type="range" id="param-color-tolerance" min="10" max="150" value="60" class="w-full accent-indigo-500"></div>
+    </div>
+
+    <div id="param-panel-motion" class="param-panel space-y-4 hidden">
+      <div class="space-y-1.5"><div class="flex justify-between text-xs"><label class="text-slate-300 font-medium">Motion Sensitivity</label><span id="val-motion-sens" class="text-indigo-400 font-mono">35</span></div>
+        <input type="range" id="param-motion-sens" min="10" max="100" value="35" class="w-full accent-indigo-500"></div>
+      <label class="flex items-center space-x-2 text-xs text-slate-300"><input type="checkbox" id="param-motion-box" checked class="w-4 h-4"><span>Highlight Motion Box</span></label>
+    </div>
+
+    <!-- Shared by AprilTag and QR modes -->
+    <div id="geo-block" class="space-y-4 hidden">
+      <div class="space-y-1.5"><label class="text-xs text-slate-300 font-medium">Physical size (cm, outer edge)</label>
+        <input id="param-tag-size" type="number" value="10" min="1" step="0.5" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm"></div>
+      <div class="space-y-1.5"><div class="flex justify-between text-xs"><label class="text-slate-300 font-medium">Focal length (px, at full size)</label><span id="val-focal" class="text-indigo-400 font-mono">900</span></div>
+        <input type="range" id="param-focal" min="300" max="2000" value="900" class="w-full accent-indigo-500">
+        <p class="text-xs text-slate-500">Hold a tag at a known distance and adjust until the reading matches.</p></div>
+    </div>
+
+    <div id="param-panel-apriltag" class="param-panel space-y-4 hidden">
+      <p class="text-xs text-slate-400">Detects tag36h11 AprilTags. Shows ID, center, heading and distance.</p>
+      <div class="space-y-1.5"><div class="flex justify-between text-xs"><label class="text-slate-300 font-medium">Max Hamming distance</label><span id="val-hamming" class="text-indigo-400 font-mono">3</span></div>
+        <input type="range" id="param-hamming" min="0" max="5" value="3" class="w-full accent-indigo-500"></div>
+      <div id="tag-list" class="space-y-2 text-xs font-mono text-slate-300 max-h-56 overflow-y-auto"><p class="text-slate-500">None yet</p></div>
+    </div>
+
+    <div id="param-panel-qr" class="param-panel space-y-4 hidden">
+      <p class="text-xs text-slate-400">Decodes QR codes. Shows content, center, heading and distance.</p>
+      <label class="flex items-center space-x-2 text-xs text-slate-300"><input type="checkbox" id="param-qr-invert" class="w-4 h-4"><span>Also try inverted codes (slower)</span></label>
+      <div class="flex justify-between items-center"><h3 class="text-xs font-semibold text-slate-400 uppercase">Scan history</h3><button id="qr-clear" class="text-xs text-slate-400 hover:text-indigo-400">Clear</button></div>
+      <div id="qr-history" class="space-y-2 text-xs max-h-56 overflow-y-auto"><p class="text-slate-500">Nothing scanned yet</p></div>
+    </div>
+
+    <div class="border-t border-slate-800 pt-4 space-y-4">
+      <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Performance Adjustments</h3>
+      <div class="space-y-1.5"><div class="flex justify-between text-xs"><label class="text-slate-300">Downscale (Speed vs Quality)</label><span id="val-downscale" class="text-indigo-400 font-mono">1.0x</span></div>
+        <input type="range" id="param-downscale" min="0.25" max="1" step="0.25" value="1" class="w-full accent-indigo-500"></div>
+      <div class="space-y-1.5"><div class="flex justify-between text-xs"><label class="text-slate-300">Pre-Blur (Noise Reduction)</label><span id="val-blur" class="text-indigo-400 font-mono">0px</span></div>
+        <input type="range" id="param-blur" min="0" max="8" value="0" class="w-full accent-indigo-500"></div>
     </div>
   </div>
 </main>
 
+<footer class="border-t border-slate-800/80 bg-slate-950 py-3 text-center text-xs text-slate-500">Client-side JavaScript computer vision, built on MediaDevices and HTML5 Canvas</footer>
+
 <script>
+// Tab styling (kept out of the markup to keep it short)
+const TAB_BASE = 'mode-tab font-medium text-xs py-2.5 px-2 rounded-xl border transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ';
+const TAB_OFF = 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border-slate-800';
+const TAB_ON = 'bg-indigo-600 text-white border-indigo-500';
+
+const DEFAULTS = { threshold:128, invertThresh:false, edgeCutoff:50, edgeColor:false, colorTolerance:60,
+  motionSensitivity:35, motionBox:true, downscale:1.0, blur:0, hamming:3, tagSize:10, focal:900, qrInvert:false };
+const state = { isCameraOn:false, facing:'user', activeMode:'none', frameCount:0, lastFps:performance.now(),
+  prevFrame:null, targetRGB:[239,68,68], params:{...DEFAULTS}, qrHistory:[], lastQr:null, trails:{} };
+
 const $ = id => document.getElementById(id);
-const video = $('video'), canvas = $('canvas');
-const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const video = $('webcam-video'), canvas = $('output-canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently:true });
 const work = document.createElement('canvas');
-const wctx = work.getContext('2d', { willReadFrequently: true });
-
-const state = {
-  on: false, stream: null, raf: null, facing: 'environment',
-  frames: 0, last: performance.now(),
-  trail: [], history: [], lastData: null, lostFrames: 0
-};
-
-if (typeof jsQR === 'undefined') {
-  $('status').textContent = 'jsQR failed to load. Check the script URL in <head>.';
-}
+const wctx = work.getContext('2d', { willReadFrequently:true });
+let mediaStream = null, rafId = null, aprilDetector = null;
 
 // ---------- Camera ----------
-async function start() {
+async function startCamera() {
   try {
-    state.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: state.facing, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
-    });
-    video.srcObject = state.stream;
-    await new Promise(r => video.onloadedmetadata = r);
-    video.play();
-    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-    state.on = true;
-    $('placeholder').classList.add('hidden');
-    $('cam-btn').classList.replace('bg-emerald-600', 'bg-rose-600');
-    $('cam-btn').classList.replace('hover:bg-emerald-500', 'hover:bg-rose-500');
-    $('cam-text').textContent = 'Stop Camera';
-    state.raf = requestAnimationFrame(loop);
-  } catch (e) {
-    alert('Unable to access camera. Allow permissions and use https or localhost.');
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:state.facing, width:{ideal:1280}, height:{ideal:720} }, audio:false });
+    video.srcObject = mediaStream;
+    // Wait for real frames (more reliable than onloadedmetadata alone)
+    await video.play();
+    if (!video.videoWidth) await new Promise(r => video.addEventListener('loadeddata', r, { once:true }));
+    state.isCameraOn = true;
+    $('cam-placeholder').classList.add('hidden');
+    resizeCanvas();
+    $('toggle-cam-btn').classList.replace('bg-emerald-600','bg-rose-600');
+    $('toggle-cam-btn').classList.replace('hover:bg-emerald-500','hover:bg-rose-500');
+    $('toggle-cam-text').textContent = 'Stop Camera';
+    rafId = requestAnimationFrame(processLoop);
+  } catch (err) {
+    console.error(err);
+    alert('Unable to access camera: ' + err.message + '\nUse https or localhost and allow camera permission.');
   }
 }
-function stop() {
-  state.stream && state.stream.getTracks().forEach(t => t.stop());
-  cancelAnimationFrame(state.raf);
-  state.on = false; state.trail = [];
-  $('placeholder').classList.remove('hidden');
-  $('cam-btn').classList.replace('bg-rose-600', 'bg-emerald-600');
-  $('cam-btn').classList.replace('hover:bg-rose-500', 'hover:bg-emerald-500');
-  $('cam-text').textContent = 'Start Camera';
-  $('fps').textContent = '0';
+function stopCamera() {
+  if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+  mediaStream = null; cancelAnimationFrame(rafId);
+  state.isCameraOn = false; state.prevFrame = null; state.trails = {};
+  $('cam-placeholder').classList.remove('hidden');
+  $('toggle-cam-btn').classList.replace('bg-rose-600','bg-emerald-600');
+  $('toggle-cam-btn').classList.replace('hover:bg-rose-500','hover:bg-emerald-500');
+  $('toggle-cam-text').textContent = 'Start Camera';
+  $('fps-counter').textContent = '0';
+}
+function resizeCanvas() {
+  if (video.videoWidth) {
+    canvas.width = Math.round(video.videoWidth * state.params.downscale);
+    canvas.height = Math.round(video.videoHeight * state.params.downscale);
+    state.prevFrame = null;
+  }
 }
 
-// ---------- Detection loop ----------
-function detect(source, sw, sh) {
-  const s = parseFloat($('downscale').value);
-  work.width = Math.max(1, Math.round(sw * s));
-  work.height = Math.max(1, Math.round(sh * s));
-  wctx.drawImage(source, 0, 0, work.width, work.height);
-  const img = wctx.getImageData(0, 0, work.width, work.height);
-  const result = jsQR(img.data, img.width, img.height, {
-    inversionAttempts: $('try-invert').checked ? 'attemptBoth' : 'dontInvert'
+// ---------- Main loop ----------
+function processLoop(ts) {
+  if (!state.isCameraOn) return;
+  rafId = requestAnimationFrame(processLoop);   // schedule first, so one error can never freeze the loop
+
+  state.frameCount++;
+  if (ts - state.lastFps >= 1000) { $('fps-counter').textContent = state.frameCount; state.frameCount = 0; state.lastFps = ts; }
+  if (video.readyState < 2) return;
+
+  try {
+    const w = canvas.width, h = canvas.height;
+    ctx.filter = state.params.blur > 0 ? `blur(${state.params.blur}px)` : 'none';
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.filter = 'none';
+
+    switch (state.activeMode) {
+      case 'grayscale': { const d = ctx.getImageData(0,0,w,h); processThreshold(d); ctx.putImageData(d,0,0); break; }
+      case 'edge': { const d = ctx.getImageData(0,0,w,h); ctx.putImageData(processSobelEdge(d,w,h),0,0); break; }
+      case 'colortrack': { const d = ctx.getImageData(0,0,w,h); const b = processColorTracking(d,w,h);
+        ctx.putImageData(d,0,0); if (b) drawBoundingBox(b,'#3b82f6','Target Object'); break; }
+      case 'motion': { const d = ctx.getImageData(0,0,w,h); const b = processMotionDetection(d,w,h);
+        ctx.putImageData(d,0,0); if (b && state.params.motionBox) drawBoundingBox(b,'#ef4444','Motion Detected'); break; }
+      case 'apriltag': runAprilTags(w,h); break;
+      case 'qr': runQr(w,h); break;
+    }
+  } catch (err) {
+    console.error(err);
+    $('status-text').textContent = 'Error: ' + err.message;
+  }
+}
+
+// ---------- Original algorithms ----------
+function processThreshold(img) {
+  const d = img.data, t = state.params.threshold, inv = state.params.invertThresh;
+  for (let i = 0; i < d.length; i += 4) {
+    const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+    let v = g >= t ? 255 : 0; if (inv) v = 255 - v;
+    d[i] = d[i+1] = d[i+2] = v;
+  }
+}
+function processSobelEdge(img, w, h) {
+  const s = img.data, out = ctx.createImageData(w,h), o = out.data;
+  const cutoff = state.params.edgeCutoff, col = state.params.edgeColor;
+  const g = new Uint8Array(w*h);
+  for (let i = 0; i < s.length; i += 4) g[i/4] = s[i]*0.299 + s[i+1]*0.587 + s[i+2]*0.114;
+  for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
+    const i = y*w + x;
+    const gx = -g[i-w-1] + g[i-w+1] - 2*g[i-1] + 2*g[i+1] - g[i+w-1] + g[i+w+1];
+    const gy = -g[i-w-1] - 2*g[i-w] - g[i-w+1] + g[i+w-1] + 2*g[i+w] + g[i+w+1];
+    const m = Math.sqrt(gx*gx + gy*gy), p = i*4;
+    if (m > cutoff) {
+      if (col) { o[p] = Math.min(255,Math.abs(gx)); o[p+1] = Math.min(255,Math.abs(gy)); o[p+2] = Math.min(255,m); }
+      else o[p] = o[p+1] = o[p+2] = 255;
+    }
+    o[p+3] = 255;
+  }
+  for (let i = 3; i < o.length; i += 4) o[i] = 255;
+  return out;
+}
+function processColorTracking(img, w, h) {
+  const d = img.data, [tr,tg,tb] = state.targetRGB, tol = state.params.colorTolerance ** 2;
+  let minX = w, maxX = 0, minY = h, maxY = 0, n = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y*w + x)*4, r = d[i], g = d[i+1], b = d[i+2];
+    if ((r-tr)**2 + (g-tg)**2 + (b-tb)**2 < tol) {
+      n++; if (x<minX) minX=x; if (x>maxX) maxX=x; if (y<minY) minY=y; if (y>maxY) maxY=y;
+      d[i] = Math.min(255,r+50); d[i+1] = Math.min(255,g+50); d[i+2] = 255;
+    } else { d[i] >>= 2; d[i+1] >>= 2; d[i+2] >>= 2; }
+  }
+  return n > 30 ? { minX, maxX, minY, maxY } : null;
+}
+function processMotionDetection(img, w, h) {
+  const d = img.data, sens = state.params.motionSensitivity;
+  if (!state.prevFrame || state.prevFrame.length !== d.length) { state.prevFrame = new Uint8ClampedArray(d); return null; }
+  const p = state.prevFrame; let minX = w, maxX = 0, minY = h, maxY = 0, n = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y*w + x)*4;
+    if ((Math.abs(d[i]-p[i]) + Math.abs(d[i+1]-p[i+1]) + Math.abs(d[i+2]-p[i+2]))/3 > sens) {
+      n++; if (x<minX) minX=x; if (x>maxX) maxX=x; if (y<minY) minY=y; if (y>maxY) maxY=y;
+      d[i] = 0; d[i+1] = 255; d[i+2] = 255;
+    }
+  }
+  p.set(d);
+  return n > 50 ? { minX, maxX, minY, maxY } : null;
+}
+function drawBoundingBox(b, color, label) {
+  const w = b.maxX - b.minX, h = b.maxY - b.minY, cx = b.minX + w/2, cy = b.minY + h/2;
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash([6,3]); ctx.strokeRect(b.minX,b.minY,w,h); ctx.setLineDash([]);
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fill();
+  ctx.font = '11px sans-serif'; ctx.fillText(`${label} (${Math.round(cx)}, ${Math.round(cy)})`, b.minX, Math.max(b.minY-6,12));
+}
+
+// ---------- Shared tag helpers ----------
+// Grab a downscaled copy of the current frame for the detectors (max 640 px wide)
+function grabWork(w, h) {
+  const s = w > 640 ? 640 / w : 1;
+  work.width = Math.round(w*s); work.height = Math.round(h*s);
+  wctx.drawImage(video, 0, 0, work.width, work.height);
+  return { img: wctx.getImageData(0, 0, work.width, work.height), s };
+}
+// corners are TL, TR, BR, BL in canvas coordinates
+function analyze(c) {
+  const cx = (c[0].x+c[1].x+c[2].x+c[3].x)/4, cy = (c[0].y+c[1].y+c[2].y+c[3].y)/4;
+  const top = { x:(c[0].x+c[1].x)/2, y:(c[0].y+c[1].y)/2 }, bot = { x:(c[2].x+c[3].x)/2, y:(c[2].y+c[3].y)/2 };
+  const heading = Math.atan2(top.x-bot.x, -(top.y-bot.y)) * 180 / Math.PI;
+  const side = [0,1,2,3].map(i => Math.hypot(c[i].x-c[(i+1)%4].x, c[i].y-c[(i+1)%4].y)).reduce((a,b)=>a+b)/4;
+  // Focal slider is in full-resolution pixels, so scale it by the canvas downscale
+  const dist = state.params.focal * state.params.downscale * state.params.tagSize / side;
+  return { cx, cy, heading, dist, top };
+}
+function drawTag(c, label, key) {
+  const a = analyze(c);
+  ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3; ctx.beginPath();
+  c.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y)); ctx.closePath(); ctx.stroke();
+  ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(c[0].x,c[0].y,6,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#3b82f6'; ctx.beginPath(); ctx.moveTo(a.cx,a.cy); ctx.lineTo(a.top.x,a.top.y); ctx.stroke();
+  ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(a.cx,a.cy,5,0,Math.PI*2); ctx.fill();
+  const txt = `${label}  ${a.dist.toFixed(1)} cm`;
+  ctx.font = 'bold 16px sans-serif'; ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.fillStyle = '#fff';
+  const lx = Math.max(6, Math.min(...c.map(p=>p.x))), ly = Math.max(22, Math.min(...c.map(p=>p.y)) - 10);
+  ctx.strokeText(txt,lx,ly); ctx.fillText(txt,lx,ly);
+  const tr = (state.trails[key] = state.trails[key] || []);
+  tr.push({x:a.cx,y:a.cy}); if (tr.length > 40) tr.shift();
+  ctx.strokeStyle = 'rgba(250,204,21,.8)'; ctx.lineWidth = 2; ctx.beginPath();
+  tr.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y)); ctx.stroke();
+  return a;
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- AprilTag mode ----------
+function getAprilDetector() {
+  if (typeof AR === 'undefined' || !AR.DICTIONARIES || !AR.DICTIONARIES.APRILTAG_36h11) return null;
+  if (!aprilDetector) aprilDetector = new AR.Detector({ dictionaryName:'APRILTAG_36h11', maxHammingDistance:state.params.hamming });
+  return aprilDetector;
+}
+function runAprilTags(w, h) {
+  const list = $('tag-list'), det = getAprilDetector();
+  if (!det) { list.innerHTML = '<p class="text-rose-400">AprilTag library did not load. Open the browser console (F12), Network tab, and check the js-aruco2 requests.</p>'; return; }
+  const { img, s } = grabWork(w, h);
+  const tags = det.detect(img);
+  const seen = new Set(); let html = '';
+  tags.forEach(t => {
+    const c = t.corners.map(p => ({ x:p.x/s, y:p.y/s }));
+    const a = drawTag(c, 'ID ' + t.id, 't' + t.id); seen.add('t' + t.id);
+    html += `<div class="bg-slate-800/70 border border-slate-700 rounded-lg p-2"><div class="text-indigo-300 font-semibold">Tag ${t.id}</div>
+      <div>center: ${a.cx.toFixed(0)}, ${a.cy.toFixed(0)}</div><div>heading: ${a.heading.toFixed(1)}&deg;</div><div>distance: ${a.dist.toFixed(1)} cm</div></div>`;
   });
-  if (!result) return null;
-  // Scale the corner points back up to full-resolution canvas coordinates
-  const L = result.location;
-  const up = p => ({ x: p.x / s, y: p.y / s });
-  return { data: result.data, corners: [up(L.topLeftCorner), up(L.topRightCorner), up(L.bottomRightCorner), up(L.bottomLeftCorner)] };
+  Object.keys(state.trails).forEach(k => { if (k[0]==='t' && !seen.has(k)) delete state.trails[k]; });
+  list.innerHTML = html || '<p class="text-slate-500">None in view</p>';
+  $('status-text').textContent = `Mode: AprilTag (${tags.length} found)`;
 }
 
-function loop(ts) {
-  if (!state.on) return;
-  state.frames++;
-  if (ts - state.last >= 1000) { $('fps').textContent = state.frames; state.frames = 0; state.last = ts; }
-
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const hit = detect(video, canvas.width, canvas.height);
-
-  if (hit) { state.lostFrames = 0; drawHit(hit); record(hit); }
-  else {
-    state.lostFrames++;
-    if (state.lostFrames > 10) state.trail = [];
-    $('status').textContent = 'QR codes found: 0';
+// ---------- QR mode ----------
+function runQr(w, h) {
+  if (typeof jsQR === 'undefined') { $('qr-history').innerHTML = '<p class="text-rose-400">jsQR did not load. Check the script URL in the page head.</p>'; return; }
+  const { img, s } = grabWork(w, h);
+  const r = jsQR(img.data, img.width, img.height, { inversionAttempts: state.params.qrInvert ? 'attemptBoth' : 'dontInvert' });
+  if (!r) { delete state.trails.qr; $('status-text').textContent = 'Mode: QR Code (0 found)'; return; }
+  const L = r.location, up = p => ({ x:p.x/s, y:p.y/s });
+  const c = [L.topLeftCorner, L.topRightCorner, L.bottomRightCorner, L.bottomLeftCorner].map(up);
+  drawTag(c, r.data.length > 30 ? r.data.slice(0,27) + '...' : r.data, 'qr');
+  $('status-text').textContent = 'Mode: QR Code (1 found)';
+  if (r.data !== state.lastQr) {
+    state.lastQr = r.data;
+    state.qrHistory.unshift({ data:r.data, time:new Date().toLocaleTimeString() });
+    state.qrHistory = state.qrHistory.slice(0,30); renderQr();
   }
-  drawTrail();
-  state.raf = requestAnimationFrame(loop);
 }
-
-// ---------- Geometry ----------
-function analyze(corners) {
-  const [a, b, c, d] = corners; // TL, TR, BR, BL
-  const cx = (a.x + b.x + c.x + d.x) / 4, cy = (a.y + b.y + c.y + d.y) / 4;
-  const topMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-  const botMid = { x: (c.x + d.x) / 2, y: (c.y + d.y) / 2 };
-  const heading = Math.atan2(topMid.x - botMid.x, -(topMid.y - botMid.y)) * 180 / Math.PI;
-  const sides = [[a,b],[b,c],[c,d],[d,a]].map(([p,q]) => Math.hypot(p.x - q.x, p.y - q.y));
-  const avgSide = sides.reduce((x, y) => x + y) / 4;
-  const dist = $('focal').value * parseFloat($('qr-size').value) / avgSide; // pinhole model
-  return { cx, cy, heading, dist, topMid };
+function renderQr() {
+  const box = $('qr-history');
+  if (!state.qrHistory.length) { box.innerHTML = '<p class="text-slate-500">Nothing scanned yet</p>'; return; }
+  box.innerHTML = state.qrHistory.map((q,i) => `<div class="bg-slate-800/70 border border-slate-700 rounded-lg p-2">
+    <div class="text-slate-500 font-mono mb-1">${q.time}</div><div class="text-slate-200 break-all">${esc(q.data)}</div>
+    <div class="flex space-x-3 mt-1.5"><button data-copy="${i}" class="text-indigo-400 hover:text-indigo-300">Copy</button>
+    ${/^https?:\/\//i.test(q.data) ? `<a href="${esc(q.data)}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300">Open link</a>` : ''}</div></div>`).join('');
 }
-
-// ---------- Drawing ----------
-function drawHit(hit) {
-  const { cx, cy, heading, dist, topMid } = analyze(hit.corners);
-  $('status').textContent = 'QR codes found: 1';
-
-  ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3;
-  ctx.beginPath();
-  hit.corners.forEach((c, i) => i ? ctx.lineTo(c.x, c.y) : ctx.moveTo(c.x, c.y));
-  ctx.closePath(); ctx.stroke();
-
-  // Top-left corner marker shows orientation
-  ctx.fillStyle = '#ef4444';
-  ctx.beginPath(); ctx.arc(hit.corners[0].x, hit.corners[0].y, 6, 0, Math.PI * 2); ctx.fill();
-
-  // Heading arrow
-  ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(topMid.x, topMid.y); ctx.stroke();
-  ctx.fillStyle = '#3b82f6';
-  ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
-
-  // Label: decoded text (truncated) and distance
-  const text = hit.data.length > 40 ? hit.data.slice(0, 37) + '...' : hit.data;
-  const label = `${text}  |  ${dist.toFixed(1)} cm  |  ${heading.toFixed(0)}\u00b0`;
-  ctx.font = 'bold 16px sans-serif';
-  ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.fillStyle = '#fff';
-  const ly = Math.max(24, Math.min(...hit.corners.map(c => c.y)) - 12);
-  const lx = Math.max(8, Math.min(...hit.corners.map(c => c.x)));
-  ctx.strokeText(label, lx, ly); ctx.fillText(label, lx, ly);
-
-  state.trail.push({ x: cx, y: cy });
-  if (state.trail.length > 40) state.trail.shift();
-  hit.metrics = { cx, cy, heading, dist };
-}
-
-function drawTrail() {
-  if (!$('show-trail').checked || state.trail.length < 2) return;
-  ctx.strokeStyle = 'rgba(250,204,21,0.8)'; ctx.lineWidth = 2;
-  ctx.beginPath();
-  state.trail.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-  ctx.stroke();
-}
-
-// ---------- History ----------
-function record(hit) {
-  if (hit.data === state.lastData) return; // only log when the content changes
-  state.lastData = hit.data;
-  state.history.unshift({ data: hit.data, time: new Date().toLocaleTimeString() });
-  if (state.history.length > 30) state.history.pop();
-  renderHistory();
-}
-
-const esc = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const isUrl = s => /^https?:\/\//i.test(s);
-
-function renderHistory() {
-  const box = $('history');
-  if (!state.history.length) { box.innerHTML = '<p class="text-slate-500">Nothing scanned yet</p>'; return; }
-  box.innerHTML = state.history.map((h, i) => `
-    <div class="bg-slate-800/70 border border-slate-700 rounded-lg p-2">
-      <div class="text-slate-500 font-mono mb-1">${h.time}</div>
-      <div class="text-slate-200 break-all">${esc(h.data)}</div>
-      <div class="flex space-x-3 mt-1.5">
-        <button data-copy="${i}" class="text-indigo-400 hover:text-indigo-300"><i class="fa-regular fa-copy mr-1"></i>Copy</button>
-        ${isUrl(h.data) ? `<a href="${esc(h.data)}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Open link</a>` : ''}
-      </div>
-    </div>`).join('');
-}
-
-$('history').addEventListener('click', e => {
-  const btn = e.target.closest('[data-copy]');
-  if (!btn) return;
-  navigator.clipboard.writeText(state.history[+btn.dataset.copy].data);
-  btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Copied';
+$('qr-history').addEventListener('click', e => {
+  const b = e.target.closest('[data-copy]'); if (!b) return;
+  navigator.clipboard.writeText(state.qrHistory[+b.dataset.copy].data); b.textContent = 'Copied';
 });
-$('clear-btn').addEventListener('click', () => { state.history = []; state.lastData = null; renderHistory(); });
+$('qr-clear').addEventListener('click', () => { state.qrHistory = []; state.lastQr = null; renderQr(); });
 
-// ---------- Decode an uploaded image ----------
-$('file-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const img = new Image();
-  img.onload = () => {
-    if (state.on) stop();
-    // Fit the image onto the display canvas, then decode at full size
-    const maxW = 1280, k = Math.min(1, maxW / img.width);
-    canvas.width = Math.round(img.width * k); canvas.height = Math.round(img.height * k);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    $('placeholder').classList.add('hidden');
-    const prev = $('downscale').value;
-    $('downscale').value = 1;
-    const hit = detect(canvas, canvas.width, canvas.height);
-    $('downscale').value = prev;
-    if (hit) { drawHit(hit); record(hit); }
-    else $('status').textContent = 'No QR code found in that image';
-    URL.revokeObjectURL(img.src);
-  };
-  img.src = URL.createObjectURL(file);
-  e.target.value = '';
-});
+// ---------- UI wiring ----------
+const tabs = document.querySelectorAll('.mode-tab'), panels = document.querySelectorAll('.param-panel');
+tabs.forEach(t => { t.className = TAB_BASE + (t.dataset.mode === 'none' ? TAB_ON : TAB_OFF); });
+tabs.forEach(tab => tab.addEventListener('click', () => {
+  const m = state.activeMode = tab.dataset.mode;
+  tabs.forEach(t => t.className = TAB_BASE + (t === tab ? TAB_ON : TAB_OFF));
+  panels.forEach(p => p.classList.add('hidden'));
+  $('param-panel-' + m).classList.remove('hidden');
+  $('geo-block').classList.toggle('hidden', m !== 'apriltag' && m !== 'qr');
+  state.trails = {}; state.prevFrame = null;
+  $('status-text').textContent = 'Mode: ' + tab.querySelector('span').textContent;
+}));
+// The geo block sits above the mode panel in the DOM; move it into the right place visually
+$('param-panel-apriltag').before($('geo-block'));
 
-// ---------- Controls ----------
-$('cam-btn').addEventListener('click', () => state.on ? stop() : start());
-$('flip-btn').addEventListener('click', () => {
+$('toggle-cam-btn').addEventListener('click', () => state.isCameraOn ? stopCamera() : startCamera());
+$('flip-cam-btn').addEventListener('click', () => {
   state.facing = state.facing === 'user' ? 'environment' : 'user';
-  if (state.on) { stop(); start(); }
+  if (state.isCameraOn) { stopCamera(); startCamera(); }
 });
-$('focal').addEventListener('input', e => $('val-f').textContent = e.target.value);
-$('downscale').addEventListener('input', e => $('val-d').textContent = e.target.value + 'x');
+canvas.addEventListener('click', e => {
+  if (state.activeMode !== 'colortrack' || !state.isCameraOn) return;
+  const r = canvas.getBoundingClientRect();
+  // object-contain letterboxes the canvas, so map through the displayed content box
+  const k = Math.min(r.width/canvas.width, r.height/canvas.height);
+  const x = Math.floor((e.clientX - r.left - (r.width - canvas.width*k)/2) / k);
+  const y = Math.floor((e.clientY - r.top - (r.height - canvas.height*k)/2) / k);
+  if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) return;
+  const p = ctx.getImageData(x,y,1,1).data;
+  state.targetRGB = [p[0],p[1],p[2]];
+  $('param-target-color').value = '#' + ((1<<24) + (p[0]<<16) + (p[1]<<8) + p[2]).toString(16).slice(1);
+});
+
+// [element id, params key, value label id, parser, suffix]
+const BINDINGS = [
+  ['param-threshold','threshold','val-threshold',parseInt,''], ['param-edge-cutoff','edgeCutoff','val-edge-cutoff',parseInt,''],
+  ['param-color-tolerance','colorTolerance','val-color-tolerance',parseInt,''], ['param-motion-sens','motionSensitivity','val-motion-sens',parseInt,''],
+  ['param-downscale','downscale','val-downscale',parseFloat,'x'], ['param-blur','blur','val-blur',parseInt,'px'],
+  ['param-hamming','hamming','val-hamming',parseInt,''], ['param-focal','focal','val-focal',parseInt,''],
+  ['param-tag-size','tagSize',null,parseFloat,'']
+];
+const CHECKS = [['param-invert-thresh','invertThresh'],['param-edge-color','edgeColor'],['param-motion-box','motionBox'],['param-qr-invert','qrInvert']];
+BINDINGS.forEach(([id,key,lbl,parse,suf]) => $(id).addEventListener('input', e => {
+  const v = parse(e.target.value); if (isNaN(v)) return;
+  state.params[key] = v;
+  if (lbl) $(lbl).textContent = (key === 'downscale' ? v.toFixed(1) : v) + suf;
+  if (key === 'downscale') resizeCanvas();
+  if (key === 'hamming') aprilDetector = null;
+}));
+CHECKS.forEach(([id,key]) => $(id).addEventListener('change', e => state.params[key] = e.target.checked));
+$('param-target-color').addEventListener('input', e => {
+  const h = e.target.value; state.targetRGB = [parseInt(h.substr(1,2),16), parseInt(h.substr(3,2),16), parseInt(h.substr(5,2),16)];
+});
+$('reset-params-btn').addEventListener('click', () => {
+  state.params = { ...DEFAULTS }; aprilDetector = null;
+  BINDINGS.forEach(([id,key,lbl,,suf]) => { $(id).value = DEFAULTS[key]; if (lbl) $(lbl).textContent = (key === 'downscale' ? DEFAULTS[key].toFixed(1) : DEFAULTS[key]) + suf; });
+  CHECKS.forEach(([id,key]) => $(id).checked = DEFAULTS[key]);
+  resizeCanvas();
+});
+
+$('snapshot-btn').addEventListener('click', () => {
+  if (!state.isCameraOn) return;
+  const f = $('flash-overlay'); f.classList.replace('opacity-0','opacity-80');
+  setTimeout(() => f.classList.replace('opacity-80','opacity-0'), 150);
+  const a = document.createElement('a');
+  a.download = `cv-snapshot-${state.activeMode}-${Date.now()}.png`; a.href = canvas.toDataURL('image/png'); a.click();
+});
 </script>
 </body>
 </html>
