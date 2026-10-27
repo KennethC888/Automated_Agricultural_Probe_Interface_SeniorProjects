@@ -98,12 +98,10 @@
                     <i class="fa-solid fa-person-walking"></i>
                     <span>Motion Detect</span>
                 </button>
-                <!-- NEW: AprilTag mode -->
                 <button data-mode="apriltag" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
                     <i class="fa-solid fa-border-none"></i>
                     <span>AprilTag</span>
                 </button>
-                <!-- NEW: QR code mode -->
                 <button data-mode="qr" class="mode-tab col-span-2 sm:col-span-1 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
                     <i class="fa-solid fa-qrcode"></i>
                     <span>QR Code</span>
@@ -184,7 +182,6 @@
                 </div>
             </div>
 
-            <!-- NEW: AprilTag panel -->
             <div id="param-panel-apriltag" class="param-panel space-y-4 hidden">
                 <p class="text-xs text-slate-400">Detects <strong class="text-slate-200">tag36h11</strong> AprilTags. Shows ID, center, heading and estimated distance.</p>
                 <div id="april-status" class="text-xs font-mono text-slate-400">Library: not loaded yet</div>
@@ -210,7 +207,6 @@
                 <div id="tag-list" class="space-y-2 text-xs font-mono text-slate-300 max-h-56 overflow-y-auto"></div>
             </div>
 
-            <!-- NEW: QR panel -->
             <div id="param-panel-qr" class="param-panel space-y-4 hidden">
                 <p class="text-xs text-slate-400">Decodes QR codes. The content appears on the video and in the history below.</p>
                 <div id="qr-status" class="text-xs font-mono text-slate-400">Library: not loaded yet</div>
@@ -261,7 +257,7 @@
         const state = {
             isCameraOn: false,
             currentFacingMode: 'user',
-            activeMode: 'none', // 'none', 'grayscale', 'edge', 'colortrack', 'motion', 'apriltag'
+            activeMode: 'none',
             fps: 0,
             frameCount: 0,
             lastFpsUpdate: performance.now(),
@@ -371,7 +367,6 @@
         function processLoop(timestamp) {
             if (!state.isCameraOn) return;
 
-            // Schedule the next frame FIRST so an error below can never freeze the video
             animationFrameId = requestAnimationFrame(processLoop);
 
             state.frameCount++;
@@ -494,7 +489,6 @@
                     dst[pixIdx + 3] = 255;
                 }
             }
-            // Border pixels were skipped; make them opaque black
             for (let i = 3; i < dst.length; i += 4) dst[i] = 255;
             return output;
         }
@@ -608,20 +602,17 @@
         }
 
         // =====================================================================
-        // NEW: AprilTag detection (tag36h11) using js-aruco2
+        // AprilTag Detection (tag36h11)
         // =====================================================================
-        // The library is loaded lazily the first time the AprilTag tab is opened,
-        // trying several CDNs in turn. If every CDN fails, the other modes are
-        // unaffected and the panel says exactly which file failed.
         const APRIL_BASES = [
             'https://cdn.jsdelivr.net/npm/js-aruco2@2.0.0/src/',
             'https://unpkg.com/js-aruco2@2.0.0/src/'
         ];
         const APRIL_FILES = ['cv.js', 'aruco.js', 'dictionaries/apriltag_36h11.js'];
 
-        let aprilState = 'idle';      // idle | loading | ready | failed
+        let aprilState = 'idle';
         let aprilDetector = null;
-        let aprilTags = [];           // latest detections, in canvas coordinates
+        let aprilTags = [];
         let lastAprilRun = 0;
         const aprilStatus = document.getElementById('april-status');
         const tagList = document.getElementById('tag-list');
@@ -660,7 +651,6 @@
                 (lastError ? lastError.message : '') + ' (check your network, then re-select this tab)';
         }
 
-        // Small offscreen canvas: detection is slow, so it runs on a reduced copy
         const aprilWork = document.createElement('canvas');
         const aprilCtx = aprilWork.getContext('2d', { willReadFrequently: true });
 
@@ -676,7 +666,6 @@
             aprilWork.height = Math.round(h * s);
             aprilCtx.drawImage(video, 0, 0, aprilWork.width, aprilWork.height);
             const markers = aprilDetector.detect(aprilCtx.getImageData(0, 0, aprilWork.width, aprilWork.height));
-            // Scale corners back to canvas coordinates
             aprilTags = markers.map(m => ({
                 id: m.id,
                 corners: m.corners.map(p => ({ x: p.x / s, y: p.y / s }))
@@ -687,7 +676,6 @@
         function processAprilTags(w, h) {
             if (aprilState === 'idle') loadAprilLibrary();
             if (aprilState === 'ready') {
-                // Detect at most ~12 times per second; redraw the last result every frame
                 const now = performance.now();
                 if (now - lastAprilRun > 80) {
                     lastAprilRun = now;
@@ -695,16 +683,19 @@
                 }
             }
             aprilTags.forEach(drawAprilTag);
+            if (aprilTags.length > 0) {
+                const firstTag = aprilTags[0];
+                const analysis = analyzeTag(firstTag.corners);
+                transmitAprilTagToBackend(firstTag, analysis);
+            }
             statusText.textContent = `Mode: AprilTag (${aprilTags.length} found)`;
         }
 
-        // Corner order from js-aruco2 is clockwise: top-left, top-right, bottom-right, bottom-left
         function analyzeTag(c) {
             const cx = (c[0].x + c[1].x + c[2].x + c[3].x) / 4;
             const cy = (c[0].y + c[1].y + c[2].y + c[3].y) / 4;
             const top = { x: (c[0].x + c[1].x) / 2, y: (c[0].y + c[1].y) / 2 };
             const bottom = { x: (c[2].x + c[3].x) / 2, y: (c[2].y + c[3].y) / 2 };
-            // 0 degrees = tag's "up" points to the top of the screen, positive = clockwise
             const heading = Math.atan2(top.x - bottom.x, -(top.y - bottom.y)) * 180 / Math.PI;
             let side = 0;
             for (let i = 0; i < 4; i++) {
@@ -712,7 +703,6 @@
                 side += Math.hypot(p.x - q.x, p.y - q.y);
             }
             side /= 4;
-            // Pinhole model. The focal slider is in full-size pixels, so scale it by the downscale.
             const distance = state.params.focal * state.params.downscale * state.params.tagSize / side;
             return { cx, cy, top, heading, distance };
         }
@@ -728,13 +718,11 @@
             ctx.closePath();
             ctx.stroke();
 
-            // Red dot on corner 0 shows orientation
             ctx.fillStyle = '#ef4444';
             ctx.beginPath();
             ctx.arc(c[0].x, c[0].y, 6, 0, Math.PI * 2);
             ctx.fill();
 
-            // Heading arrow and center point
             ctx.strokeStyle = '#3b82f6';
             ctx.beginPath();
             ctx.moveTo(a.cx, a.cy);
@@ -773,15 +761,15 @@
         }
 
         // =====================================================================
-        // NEW: QR code detection using jsQR
+        // QR Code Detection
         // =====================================================================
         const QR_URLS = [
             'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
             'https://unpkg.com/jsqr@1.4.0/dist/jsQR.min.js',
             'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'
         ];
-        let qrState = 'idle';         // idle | loading | ready | failed
-        let qrResult = null;          // { data, corners } in canvas coordinates, or null
+        let qrState = 'idle';
+        let qrResult = null;
         let qrHistory = [];
         let lastQrData = null;
         let lastQrRun = 0;
@@ -821,7 +809,6 @@
                 inversionAttempts: state.params.qrInvert ? 'attemptBoth' : 'dontInvert'
             });
             if (!r) {
-                // Keep the last box for a few checks so it doesn't flicker
                 if (++qrMissFrames > 4) qrResult = null;
                 return;
             }
@@ -909,11 +896,13 @@
             navigator.clipboard.writeText(qrHistory[+btn.dataset.copy].data);
             btn.textContent = 'Copied';
         });
+
         document.getElementById('qr-clear-btn').addEventListener('click', () => {
             qrHistory = [];
             lastQrData = null;
             renderQrHistory();
         });
+
         document.getElementById('param-qr-invert').addEventListener('change', (e) => {
             state.params.qrInvert = e.target.checked;
         });
@@ -961,7 +950,7 @@
                 statusText.textContent = `Mode: ${tab.querySelector('span').textContent}`;
 
                 if (selectedMode === 'apriltag') {
-                    if (aprilState === 'failed') aprilState = 'idle'; // allow a retry
+                    if (aprilState === 'failed') aprilState = 'idle';
                     loadAprilLibrary();
                 }
                 if (selectedMode === 'qr') {
@@ -974,7 +963,6 @@
         canvas.addEventListener('click', (e) => {
             if (state.activeMode !== 'colortrack' || !state.isCameraOn) return;
 
-            // object-contain letterboxes the canvas, so map through the displayed content box
             const rect = canvas.getBoundingClientRect();
             const k = Math.min(rect.width / canvas.width, rect.height / canvas.height);
             const x = Math.floor((e.clientX - rect.left - (rect.width - canvas.width * k) / 2) / k);
@@ -1029,7 +1017,6 @@
             state.params.motionBox = e.target.checked;
         });
 
-        // NEW: AprilTag controls
         document.getElementById('param-tag-size').addEventListener('input', (e) => {
             const v = parseFloat(e.target.value);
             if (v > 0) state.params.tagSize = v;
@@ -1043,7 +1030,7 @@
         document.getElementById('param-hamming').addEventListener('input', (e) => {
             state.params.hamming = parseInt(e.target.value);
             document.getElementById('val-hamming').textContent = e.target.value;
-            aprilDetector = null; // rebuilt with the new tolerance on the next detection
+            aprilDetector = null;
         });
 
         document.getElementById('param-downscale').addEventListener('input', (e) => {
@@ -1114,6 +1101,51 @@
             link.href = dataURL;
             link.click();
         });
+
+        // =====================================================================
+        // BACKEND WEBSOCKET INTEGRATION
+        // =====================================================================
+        let socket = null;
+        let lastReportTime = 0;
+
+        function connectBackend() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.host || 'localhost:8000';
+            socket = new WebSocket(`${wsProtocol}//${wsHost}/ws`);
+
+            socket.onopen = () => {
+                console.log("[Backend] Connected to Python Base Station WebSocket");
+                statusText.textContent = "Backend: Connected";
+            };
+
+            socket.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                if (msg.event === 'probe_complete') {
+                    alert(`Soil probe complete at ${msg.zone}!\nMoisture: ${msg.readings.moisture_pct}%\npH: ${msg.readings.ph_level}`);
+                }
+            };
+
+            socket.onclose = () => {
+                console.warn("[Backend] Disconnected. Retrying in 3s...");
+                setTimeout(connectBackend, 3000);
+            };
+        }
+
+        function transmitAprilTagToBackend(tag, analysis) {
+            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+            const now = performance.now();
+            if (now - lastReportTime < 500) return;
+
+            lastReportTime = now;
+            socket.send(JSON.stringify({
+                event: 'apriltag_detected',
+                tag_id: tag.id,
+                distance_cm: parseFloat(analysis.distance.toFixed(1)),
+                heading_deg: parseFloat(analysis.heading.toFixed(1))
+            }));
+        }
+
+        connectBackend();
     </script>
 </body>
 </html>
