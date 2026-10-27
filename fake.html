@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Computer Vision Studio</title>
+    <!-- Tailwind CSS for modern responsive UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons for clean iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar styles for control sidebars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 1); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-indigo-400">
+                <i class="fa-solid fa-eye text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-none tracking-tight text-white">JS Vision Studio</h1>
+                <p class="text-xs text-slate-400 mt-1">Real-time Browser Computer Vision & Processing</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- FPS Badge -->
+            <div class="bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-1.5 flex items-center space-x-2 text-xs font-mono">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-slate-400">FPS:</span>
+                <span id="fps-counter" class="text-emerald-400 font-bold">0</span>
+            </div>
+
+            <!-- Start/Stop Camera Button -->
+            <button id="toggle-cam-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-lg transition-all flex items-center space-x-2 shadow-lg shadow-emerald-900/20 active:scale-95">
+                <i class="fa-solid fa-video"></i>
+                <span id="toggle-cam-text">Start Camera</span>
+            </button>
+
+            <!-- Flip Camera Button (for mobile front/back) -->
+            <button id="flip-cam-btn" title="Flip Camera" class="bg-slate-800 hover:bg-slate-700 border border-slate-700/80 text-slate-300 p-2 rounded-lg transition-all active:scale-95">
+                <i class="fa-solid fa-camera-rotate"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 p-4 lg:p-6 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Video Feed & Processing Canvas Viewport (8 Cols on LG) -->
+        <div class="lg:col-span-8 flex flex-col space-y-4">
+            
+            <!-- Canvas Container -->
+            <div class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl group flex justify-center items-center aspect-video min-h-[300px]">
+                
+                <!-- Hidden Source Video Element -->
+                <video id="webcam-video" autoplay playsinline class="hidden"></video>
+
+                <!-- Output Canvas for Processed Graphics -->
+                <canvas id="output-canvas" class="w-full h-full object-contain cursor-crosshair"></canvas>
+
+                <!-- Overlay Camera Off Placeholder -->
+                <div id="cam-placeholder" class="absolute inset-0 flex flex-col justify-center items-center bg-slate-900/95 text-slate-500 p-6 text-center">
+                    <div class="w-16 h-16 rounded-full bg-slate-800/80 border border-slate-700 flex justify-center items-center mb-4 text-slate-400">
+                        <i class="fa-solid fa-video-slash text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-slate-300 mb-1">Camera Inactive</h3>
+                    <p class="text-xs max-w-sm text-slate-400">Click <strong class="text-slate-200">Start Camera</strong> above to enable live stream processing. All computer vision runs 100% locally on your machine.</p>
+                </div>
+
+                <!-- Snapshot Flash Animation Overlay -->
+                <div id="flash-overlay" class="absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
+                <!-- Canvas Control Bar Floating Overlay -->
+                <div class="absolute bottom-3 left-3 right-3 flex justify-between items-center bg-slate-950/80 backdrop-blur-md border border-slate-800/80 p-2 rounded-xl opacity-90 transition-opacity">
+                    <div id="status-indicator" class="text-xs font-mono text-slate-400 px-2 flex items-center space-x-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
+                        <span id="status-text">Mode: Normal Feed</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="snapshot-btn" title="Capture Snapshot" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 shadow-md shadow-indigo-900/30">
+                            <i class="fa-solid fa-camera"></i>
+                            <span>Snapshot</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Mode Selector Tabs -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                <button data-mode="none" class="mode-tab active bg-indigo-600 text-white font-medium text-xs py-2.5 px-3 rounded-xl border border-indigo-500 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>Passthrough</span>
+                </button>
+                <button data-mode="grayscale" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <i class="fa-solid fa-circle-half-stroke"></i>
+                    <span>Threshold</span>
+                </button>
+                <button data-mode="edge" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <i class="fa-solid fa-border-all"></i>
+                    <span>Sobel Edge</span>
+                </button>
+                <button data-mode="colortrack" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>Color Track</span>
+                </button>
+                <button data-mode="motion" class="mode-tab col-span-2 sm:col-span-1 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <i class="fa-solid fa-person-walking"></i>
+                    <span>Motion Detect</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Computer Vision Algorithm Parameters & Settings (4 Cols on LG) -->
+        <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-6 shadow-xl">
+            
+            <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                <h2 class="font-bold text-slate-200 text-sm tracking-wide uppercase flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i>
+                    <span>CV Controls</span>
+                </h2>
+                <button id="reset-params-btn" class="text-xs text-slate-400 hover:text-indigo-400 transition">Reset Default</button>
+            </div>
+
+            <!-- Dynamic Parameter Panels -->
+            
+            <!-- Panel: Passthrough / General Controls -->
+            <div id="param-panel-none" class="param-panel space-y-4">
+                <p class="text-xs text-slate-400">Showing clean camera feed. Adjust global pre-processing options below.</p>
+            </div>
+
+            <!-- Panel: Thresholding / Grayscale -->
+            <div id="param-panel-grayscale" class="param-panel space-y-4 hidden">
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-300 font-medium">Binarization Threshold</label>
+                        <span id="val-threshold" class="text-indigo-400 font-mono">128</span>
+                    </div>
+                    <input type="range" id="param-threshold" min="0" max="255" value="128" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                </div>
+                <div class="flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="param-invert-thresh" class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                    <label for="param-invert-thresh" class="text-xs text-slate-300">Invert Black/White</label>
+                </div>
+            </div>
+
+            <!-- Panel: Edge Detection -->
+            <div id="param-panel-edge" class="param-panel space-y-4 hidden">
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-300 font-medium">Sobel Cutoff Intensity</label>
+                        <span id="val-edge-cutoff" class="text-indigo-400 font-mono">50</span>
+                    </div>
+                    <input type="range" id="param-edge-cutoff" min="10" max="200" value="50" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                </div>
+                <div class="flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="param-edge-color" class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                    <label for="param-edge-color" class="text-xs text-slate-300">Color Gradient Overlay</label>
+                </div>
+            </div>
+
+            <!-- Panel: Color Tracker -->
+            <div id="param-panel-colortrack" class="param-panel space-y-4 hidden">
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-300 font-medium block">Target Color</label>
+                    <div class="flex items-center space-x-3">
+                        <input type="color" id="param-target-color" value="#ef4444" class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer p-0.5">
+                        <span class="text-xs text-slate-400">Click on video canvas to pick target color directly!</span>
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-300 font-medium">Color Distance Tolerance</label>
+                        <span id="val-color-tolerance" class="text-indigo-400 font-mono">60</span>
+                    </div>
+                    <input type="range" id="param-color-tolerance" min="10" max="150" value="60" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Panel: Motion Detection -->
+            <div id="param-panel-motion" class="param-panel space-y-4 hidden">
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-300 font-medium">Motion Sensitivity</label>
+                        <span id="val-motion-sens" class="text-indigo-400 font-mono">35</span>
+                    </div>
+                    <input type="range" id="param-motion-sens" min="10" max="100" value="35" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                </div>
+                <div class="flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="param-motion-box" checked class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                    <label for="param-motion-box" class="text-xs text-slate-300">Highlight Motion Box</label>
+                </div>
+            </div>
+
+            <!-- Global Processing & Performance Options -->
+            <div class="border-t border-slate-800 pt-4 space-y-4">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Performance Adjustments</h3>
+                
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-300">Downscale Scale (Speed vs Quality)</label>
+                        <span id="val-downscale" class="text-indigo-400 font-mono">1.0x</span>
+                    </div>
+                    <input type="range" id="param-downscale" min="0.25" max="1" step="0.25" value="1" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-300">Pre-Blur (Noise Reduction)</label>
+                        <span id="val-blur" class="text-indigo-400 font-mono">0px</span>
+                    </div>
+                    <input type="range" id="param-blur" min="0" max="8" value="0" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                </div>
+            </div>
+            
+            <!-- Information Box -->
+            <div class="bg-indigo-950/30 border border-indigo-800/40 rounded-xl p-3 text-xs text-indigo-300/80 leading-relaxed">
+                <i class="fa-solid fa-circle-info mr-1 text-indigo-400"></i>
+                This app runs fully in your web browser using HTML canvas pixel manipulation (`ImageData`). Zero server upload ensures total privacy and instant link sharing!
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950 py-3 text-center text-xs text-slate-500">
+        <p>Client-Side JavaScript Computer Vision • Built with Web API `MediaDevices` & HTML5 Canvas</p>
+    </footer>
+
+    <!-- Application Computer Vision Engine Script -->
+    <script>
+        // --- State Management ---
+        const state = {
+            isCameraOn: false,
+            currentFacingMode: 'user', // 'user' or 'environment'
+            activeMode: 'none', // 'none', 'grayscale', 'edge', 'colortrack', 'motion'
+            fps: 0,
+            frameCount: 0,
+            lastFpsUpdate: performance.now(),
+            previousFrameData: null, // Saved frame buffer for frame differencing
+            targetRGB: [239, 68, 68], // Default red color target
+            params: {
+                threshold: 128,
+                invertThresh: false,
+                edgeCutoff: 50,
+                edgeColor: false,
+                colorTolerance: 60,
+                motionSensitivity: 35,
+                motionBox: true,
+                downscale: 1.0,
+                blur: 0
+            }
+        };
+
+        // --- DOM Elements ---
+        const video = document.getElementById('webcam-video');
+        const canvas = document.getElementById('output-canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const camPlaceholder = document.getElementById('cam-placeholder');
+        const toggleCamBtn = document.getElementById('toggle-cam-btn');
+        const toggleCamText = document.getElementById('toggle-cam-text');
+        const flipCamBtn = document.getElementById('flip-cam-btn');
+        const fpsCounter = document.getElementById('fps-counter');
+        const statusText = document.getElementById('status-text');
+        const snapshotBtn = document.getElementById('snapshot-btn');
+        const flashOverlay = document.getElementById('flash-overlay');
+
+        let mediaStream = null;
+        let animationFrameId = null;
+
+        // --- WebCam Initialization & Lifecycle ---
+        async function startCamera() {
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: state.currentFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = mediaStream;
+                
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => resolve();
+                });
+
+                video.play();
+                state.isCameraOn = true;
+                
+                // Hide placeholder and adjust canvas dimensions
+                camPlaceholder.classList.add('hidden');
+                resizeCanvas();
+
+                // UI Button Update
+                toggleCamBtn.classList.replace('bg-emerald-600', 'bg-rose-600');
+                toggleCamBtn.classList.replace('hover:bg-emerald-500', 'hover:bg-rose-500');
+                toggleCamText.textContent = 'Stop Camera';
+
+                // Start Main Processing Loop
+                requestAnimationFrame(processLoop);
+            } catch (err) {
+                console.error("Camera access error:", err);
+                alert("Unable to access camera. Please allow camera permissions in your browser context.");
+            }
+        }
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            state.isCameraOn = false;
+            state.previousFrameData = null;
+            camPlaceholder.classList.remove('hidden');
+
+            // Reset UI Toggle Button
+            toggleCamBtn.classList.replace('bg-rose-600', 'bg-emerald-600');
+            toggleCamBtn.classList.replace('hover:bg-rose-500', 'hover:bg-emerald-500');
+            toggleCamText.textContent = 'Start Camera';
+            fpsCounter.textContent = '0';
+        }
+
+        function resizeCanvas() {
+            if (video.videoWidth && video.videoHeight) {
+                canvas.width = video.videoWidth * state.params.downscale;
+                canvas.height = video.videoHeight * state.params.downscale;
+            }
+        }
+
+        // --- Main Computer Vision Render Loop ---
+        function processLoop(timestamp) {
+            if (!state.isCameraOn) return;
+
+            // Compute FPS
+            state.frameCount++;
+            if (timestamp - state.lastFpsUpdate >= 1000) {
+                state.fps = state.frameCount;
+                state.frameCount = 0;
+                state.lastFpsUpdate = timestamp;
+                fpsCounter.textContent = state.fps;
+            }
+
+            // 1. Draw raw video frame onto Canvas context
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            ctx.filter = state.params.blur > 0 ? `blur(${state.params.blur}px)` : 'none';
+            ctx.drawImage(video, 0, 0, w, h);
+            ctx.filter = 'none'; // Reset filter
+
+            // 2. Fetch raw pixel byte buffer (RGBA)
+            const frameImageData = ctx.getImageData(0, 0, w, h);
+            
+            // 3. Apply designated Computer Vision algorithm
+            switch (state.activeMode) {
+                case 'grayscale':
+                    processThreshold(frameImageData);
+                    ctx.putImageData(frameImageData, 0, 0);
+                    break;
+
+                case 'edge':
+                    const edgeImageData = processSobelEdge(frameImageData, w, h);
+                    ctx.putImageData(edgeImageData, 0, 0);
+                    break;
+
+                case 'colortrack':
+                    const trackedBox = processColorTracking(frameImageData, w, h);
+                    ctx.putImageData(frameImageData, 0, 0);
+                    if (trackedBox) {
+                        drawBoundingBox(trackedBox, '#3b82f6', 'Target Object');
+                    }
+                    break;
+
+                case 'motion':
+                    const motionBox = processMotionDetection(frameImageData, w, h);
+                    ctx.putImageData(frameImageData, 0, 0);
+                    if (motionBox && state.params.motionBox) {
+                        drawBoundingBox(motionBox, '#ef4444', 'Motion Detected');
+                    }
+                    break;
+
+                case 'none':
+                default:
+                    // Passthrough mode, canvas already holds drawn frame
+                    break;
+            }
+
+            // Loop frame request
+            animationFrameId = requestAnimationFrame(processLoop);
+        }
+
+        // --- CV Algorithm Implementations ---
+
+        /**
+         * Algorithm 1: Grayscale & Binarization Thresholding
+         */
+        function processThreshold(imageData) {
+            const data = imageData.data;
+            const thresh = state.params.threshold;
+            const invert = state.params.invertThresh;
+
+            for (let i = 0; i < data.length; i += 4) {
+                // Luminance calculation formula
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                let val = gray >= thresh ? 255 : 0;
+                if (invert) val = 255 - val;
+
+                data[i]     = val; // Red
+                data[i + 1] = val; // Green
+                data[i + 2] = val; // Blue
+            }
+        }
+
+        /**
+         * Algorithm 2: Sobel Operator Spatial Gradient (Edge Detection)
+         */
+        function processSobelEdge(imageData, width, height) {
+            const src = imageData.data;
+            const output = ctx.createImageData(width, height);
+            const dst = output.data;
+            const cutoff = state.params.edgeCutoff;
+            const isColor = state.params.edgeColor;
+
+            // Convert to grayscale matrix array first for performance
+            const grayBuf = new Uint8Array(width * height);
+            for (let i = 0; i < src.length; i += 4) {
+                grayBuf[i / 4] = (src[i] * 0.299 + src[i + 1] * 0.587 + src[i + 2] * 0.114);
+            }
+
+            // Sobel Convolution Kernels
+            // Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
+            // Gy = [[-1, -2, -1], [ 0,  0,  0], [ 1,  2,  1]]
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const idx = y * width + x;
+
+                    const gx = 
+                        -1 * grayBuf[idx - width - 1] + 1 * grayBuf[idx - width + 1] +
+                        -2 * grayBuf[idx - 1]         + 2 * grayBuf[idx + 1] +
+                        -1 * grayBuf[idx + width - 1] + 1 * grayBuf[idx + width + 1];
+
+                    const gy = 
+                        -1 * grayBuf[idx - width - 1] - 2 * grayBuf[idx - width] - 1 * grayBuf[idx - width + 1] +
+                         1 * grayBuf[idx + width - 1] + 2 * grayBuf[idx + width] + 1 * grayBuf[idx + width + 1];
+
+                    // Gradient magnitude approximation
+                    const g = Math.sqrt(gx * gx + gy * gy);
+                    const pixIdx = idx * 4;
+
+                    if (g > cutoff) {
+                        if (isColor) {
+                            dst[pixIdx]     = Math.min(255, Math.abs(gx));
+                            dst[pixIdx + 1] = Math.min(255, Math.abs(gy));
+                            dst[pixIdx + 2] = Math.min(255, g);
+                        } else {
+                            dst[pixIdx]     = 255;
+                            dst[pixIdx + 1] = 255;
+                            dst[pixIdx + 2] = 255;
+                        }
+                    } else {
+                        dst[pixIdx]     = 0;
+                        dst[pixIdx + 1] = 0;
+                        dst[pixIdx + 2] = 0;
+                    }
+                    dst[pixIdx + 3] = 255; // Alpha
+                }
+            }
+            return output;
+        }
+
+        /**
+         * Algorithm 3: RGB Euclidean Distance Color Tracking & Centroid Computation
+         */
+        function processColorTracking(imageData, width, height) {
+            const data = imageData.data;
+            const [targetR, targetG, targetB] = state.targetRGB;
+            const tolSq = state.params.colorTolerance * state.params.colorTolerance;
+
+            let minX = width, maxX = 0, minY = height, maxY = 0;
+            let matchCount = 0;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const i = (y * width + x) * 4;
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+
+                    // Euclidean color distance square
+                    const distSq = (r - targetR) ** 2 + (g - targetG) ** 2 + (b - targetB) ** 2;
+
+                    if (distSq < tolSq) {
+                        matchCount++;
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+
+                        // Highlight matched color pixels in frame
+                        data[i]     = Math.min(255, r + 50);
+                        data[i + 1] = Math.min(255, g + 50);
+                        data[i + 2] = 255;
+                    } else {
+                        // Dim unmatched regions
+                        data[i]     = data[i] >> 2;
+                        data[i + 1] = data[i + 1] >> 2;
+                        data[i + 2] = data[i + 2] >> 2;
+                    }
+                }
+            }
+
+            // Only return bounding region if significant pixel mass is found
+            if (matchCount > 30) {
+                return { minX, maxX, minY, maxY };
+            }
+            return null;
+        }
+
+        /**
+         * Algorithm 4: Temporal Frame Differencing Motion Detection
+         */
+        function processMotionDetection(imageData, width, height) {
+            const data = imageData.data;
+            const sens = state.params.motionSensitivity;
+
+            if (!state.previousFrameData || state.previousFrameData.length !== data.length) {
+                state.previousFrameData = new Uint8ClampedArray(data);
+                return null;
+            }
+
+            const prev = state.previousFrameData;
+            let minX = width, maxX = 0, minY = height, maxY = 0;
+            let motionPixels = 0;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const i = (y * width + x) * 4;
+
+                    const diffR = Math.abs(data[i] - prev[i]);
+                    const diffG = Math.abs(data[i + 1] - prev[i + 1]);
+                    const diffB = Math.abs(data[i + 2] - prev[i + 2]);
+                    const avgDiff = (diffR + diffG + diffB) / 3;
+
+                    if (avgDiff > sens) {
+                        motionPixels++;
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+
+                        // Highlight motion pixels in bright cyan
+                        data[i]     = 0;
+                        data[i + 1] = 255;
+                        data[i + 2] = 255;
+                    }
+                }
+            }
+
+            // Store current buffer as reference for next frame
+            state.previousFrameData.set(data);
+
+            if (motionPixels > 50) {
+                return { minX, maxX, minY, maxY };
+            }
+            return null;
+        }
+
+        /**
+         * Canvas Bounding Box & Centroid Marker Drawing Helper
+         */
+        function drawBoundingBox(box, color, label) {
+            const { minX, maxX, minY, maxY } = box;
+            const width = maxX - minX;
+            const height = maxY - minY;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 3]);
+            ctx.strokeRect(minX, minY, width, height);
+            ctx.setLineDash([]);
+
+            // Center Point Marker
+            const centerX = minX + width / 2;
+            const centerY = minY + height / 2;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Text Tag
+            ctx.font = '11px sans-serif';
+            ctx.fillStyle = color;
+            ctx.fillText(`${label} (${Math.round(centerX)}, ${Math.round(centerY)})`, minX, Math.max(minY - 6, 12));
+        }
+
+        // --- Event Listeners & Control Handlers ---
+
+        // Start/Stop Toggle
+        toggleCamBtn.addEventListener('click', () => {
+            if (state.isCameraOn) {
+                stopCamera();
+            } else {
+                startCamera();
+            }
+        });
+
+        // Flip Front/Rear Camera
+        flipCamBtn.addEventListener('click', () => {
+            state.currentFacingMode = state.currentFacingMode === 'user' ? 'environment' : 'user';
+            if (state.isCameraOn) {
+                stopCamera();
+                startCamera();
+            }
+        });
+
+        // Mode Switching Tabs
+        const modeTabs = document.querySelectorAll('.mode-tab');
+        const paramPanels = document.querySelectorAll('.param-panel');
+
+        modeTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const selectedMode = tab.getAttribute('data-mode');
+                state.activeMode = selectedMode;
+
+                // Update UI active state on tabs
+                modeTabs.forEach(t => {
+                    t.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-500');
+                    t.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-800');
+                });
+                tab.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-800');
+                tab.classList.add('bg-indigo-600', 'text-white', 'border-indigo-500');
+
+                // Switch parameter view panel
+                paramPanels.forEach(panel => panel.classList.add('hidden'));
+                const targetPanel = document.getElementById(`param-panel-${selectedMode}`);
+                if (targetPanel) targetPanel.classList.remove('hidden');
+
+                // Update status indicator
+                statusText.textContent = `Mode: ${tab.querySelector('span').textContent}`;
+            });
+        });
+
+        // Interactive Canvas Pick Target Color
+        canvas.addEventListener('click', (e) => {
+            if (state.activeMode !== 'colortrack' || !state.isCameraOn) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+
+            // Fetch clicked pixel color
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            state.targetRGB = [pixel[0], pixel[1], pixel[2]];
+
+            // Convert RGB to Hex for color picker input
+            const hexColor = "#" + ((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1);
+            document.getElementById('param-target-color').value = hexColor;
+        });
+
+        // Dynamic Parameter Binding Handlers
+        document.getElementById('param-threshold').addEventListener('input', (e) => {
+            state.params.threshold = parseInt(e.target.value);
+            document.getElementById('val-threshold').textContent = e.target.value;
+        });
+
+        document.getElementById('param-invert-thresh').addEventListener('change', (e) => {
+            state.params.invertThresh = e.target.checked;
+        });
+
+        document.getElementById('param-edge-cutoff').addEventListener('input', (e) => {
+            state.params.edgeCutoff = parseInt(e.target.value);
+            document.getElementById('val-edge-cutoff').textContent = e.target.value;
+        });
+
+        document.getElementById('param-edge-color').addEventListener('change', (e) => {
+            state.params.edgeColor = e.target.checked;
+        });
+
+        document.getElementById('param-target-color').addEventListener('input', (e) => {
+            const hex = e.target.value;
+            state.targetRGB = [
+                parseInt(hex.substr(1, 2), 16),
+                parseInt(hex.substr(3, 2), 16),
+                parseInt(hex.substr(5, 2), 16)
+            ];
+        });
+
+        document.getElementById('param-color-tolerance').addEventListener('input', (e) => {
+            state.params.colorTolerance = parseInt(e.target.value);
+            document.getElementById('val-color-tolerance').textContent = e.target.value;
+        });
+
+        document.getElementById('param-motion-sens').addEventListener('input', (e) => {
+            state.params.motionSensitivity = parseInt(e.target.value);
+            document.getElementById('val-motion-sens').textContent = e.target.value;
+        });
+
+        document.getElementById('param-motion-box').addEventListener('change', (e) => {
+            state.params.motionBox = e.target.checked;
+        });
+
+        document.getElementById('param-downscale').addEventListener('input', (e) => {
+            state.params.downscale = parseFloat(e.target.value);
+            document.getElementById('val-downscale').textContent = `${e.target.value}x`;
+            resizeCanvas();
+        });
+
+        document.getElementById('param-blur').addEventListener('input', (e) => {
+            state.params.blur = parseInt(e.target.value);
+            document.getElementById('val-blur').textContent = `${e.target.value}px`;
+        });
+
+        // Reset Settings
+        document.getElementById('reset-params-btn').addEventListener('click', () => {
+            state.params = {
+                threshold: 128,
+                invertThresh: false,
+                edgeCutoff: 50,
+                edgeColor: false,
+                colorTolerance: 60,
+                motionSensitivity: 35,
+                motionBox: true,
+                downscale: 1.0,
+                blur: 0
+            };
+            document.getElementById('param-threshold').value = 128;
+            document.getElementById('val-threshold').textContent = 128;
+            document.getElementById('param-invert-thresh').checked = false;
+            document.getElementById('param-edge-cutoff').value = 50;
+            document.getElementById('val-edge-cutoff').textContent = 50;
+            document.getElementById('param-edge-color').checked = false;
+            document.getElementById('param-color-tolerance').value = 60;
+            document.getElementById('val-color-tolerance').textContent = 60;
+            document.getElementById('param-motion-sens').value = 35;
+            document.getElementById('val-motion-sens').textContent = 35;
+            document.getElementById('param-motion-box').checked = true;
+            document.getElementById('param-downscale').value = 1.0;
+            document.getElementById('val-downscale').textContent = '1.0x';
+            document.getElementById('param-blur').value = 0;
+            document.getElementById('val-blur').textContent = '0px';
+            resizeCanvas();
+        });
+
+        // Snapshot Download
+        snapshotBtn.addEventListener('click', () => {
+            if (!state.isCameraOn) return;
+
+            // Flash visual cue
+            flashOverlay.classList.remove('opacity-0');
+            flashOverlay.classList.add('opacity-80');
+            setTimeout(() => {
+                flashOverlay.classList.remove('opacity-80');
+                flashOverlay.classList.add('opacity-0');
+            }, 150);
+
+            // Export Canvas as PNG
+            const dataURL = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `cv-snapshot-${state.activeMode}-${Date.now()}.png`;
+            link.href = dataURL;
+            link.click();
+        });
+    </script>
+</body>
+</html>
