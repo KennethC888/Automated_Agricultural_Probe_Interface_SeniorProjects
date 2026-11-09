@@ -1,0 +1,41 @@
+running develop
+Removing /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm-rover-sim.egg-link (link to .)
+running egg_info
+writing ../../build/farm_rover_sim/farm_rover_sim.egg-info/PKG-INFO
+writing dependency_links to ../../build/farm_rover_sim/farm_rover_sim.egg-info/dependency_links.txt
+writing entry points to ../../build/farm_rover_sim/farm_rover_sim.egg-info/entry_points.txt
+writing requirements to ../../build/farm_rover_sim/farm_rover_sim.egg-info/requires.txt
+writing top-level names to ../../build/farm_rover_sim/farm_rover_sim.egg-info/top_level.txt
+reading manifest file '../../build/farm_rover_sim/farm_rover_sim.egg-info/SOURCES.txt'
+writing manifest file '../../build/farm_rover_sim/farm_rover_sim.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build
+creating /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib
+creating /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+copying farm_rover_sim/rover_node.py -> /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+copying farm_rover_sim/__init__.py -> /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+copying farm_rover_sim/base_station_node.py -> /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+copying farm_rover_sim/farm_map.py -> /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+running install
+running install_lib
+creating /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+copying /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim/rover_node.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+copying /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim/__init__.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+copying /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim/base_station_node.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+copying /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim/farm_map.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+byte-compiling /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim/rover_node.py to rover_node.cpython-310.pyc
+byte-compiling /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim/base_station_node.py to base_station_node.cpython-310.pyc
+byte-compiling /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim/farm_map.py to farm_map.cpython-310.pyc
+running install_data
+copying resource/farm_rover_sim -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/ament_index/resource_index/packages
+copying package.xml -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/farm_rover_sim
+copying launch/farm_sim.launch.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/farm_rover_sim/launch
+copying rviz/farm_view.rviz -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/farm_rover_sim/rviz
+running install_egg_info
+Copying ../../build/farm_rover_sim/farm_rover_sim.egg-info to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim-0.1.0-py3.10.egg-info
+running install_scripts
+Installing base_station_node script to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/farm_rover_sim
+Installing rover_node script to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/farm_rover_sim
+writing list of installed files to '/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/install.log'

@@ -1,0 +1,18 @@
+[1.034s] Invoking command in '/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim': PYTHONPATH=/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build --no-deps symlink_data
+[1.292s] running develop
+[1.447s] running egg_info
+[1.448s] writing farm_rover_sim.egg-info/PKG-INFO
+[1.449s] writing dependency_links to farm_rover_sim.egg-info/dependency_links.txt
+[1.449s] writing entry points to farm_rover_sim.egg-info/entry_points.txt
+[1.449s] writing requirements to farm_rover_sim.egg-info/requires.txt
+[1.449s] writing top-level names to farm_rover_sim.egg-info/top_level.txt
+[1.451s] reading manifest file 'farm_rover_sim.egg-info/SOURCES.txt'
+[1.452s] writing manifest file 'farm_rover_sim.egg-info/SOURCES.txt'
+[1.454s] running build_ext
+[1.454s] Creating /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm-rover-sim.egg-link (link to .)
+[1.455s] Installing base_station_node script to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/farm_rover_sim
+[1.455s] Installing rover_node script to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/farm_rover_sim
+[1.456s] 
+[1.456s] Installed /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim
+[1.456s] running symlink_data
+[1.479s] Invoked command in '/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim' returned '0': PYTHONPATH=/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build --no-deps symlink_data

@@ -1,0 +1,18 @@
+running develop
+running egg_info
+writing farm_rover_sim.egg-info/PKG-INFO
+writing dependency_links to farm_rover_sim.egg-info/dependency_links.txt
+writing entry points to farm_rover_sim.egg-info/entry_points.txt
+writing requirements to farm_rover_sim.egg-info/requires.txt
+writing top-level names to farm_rover_sim.egg-info/top_level.txt
+reading manifest file 'farm_rover_sim.egg-info/SOURCES.txt'
+writing manifest file 'farm_rover_sim.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm-rover-sim.egg-link (link to .)
+Installing base_station_node script to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/farm_rover_sim
+Installing rover_node script to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/farm_rover_sim
+
+Installed /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim
+running symlink_data
+creating /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/farm_rover_sim/rviz
+symbolically linking /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/rviz/farm_view.rviz -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/farm_rover_sim/rviz

@@ -1,0 +1,4 @@
+Timestamp,Target_Type,AprilTag_ID,Zone_Name,Moisture_Pct,Temp_C,Temp_F,pH,LoRa_RSSI_dBm,LoRa_SNR_dB
+2026-11-03 15:18:49,AprilTag,0,"Zone Alpha - Origin",22.2,22.4,72.3,6.55,-95,9.8
+2026-11-03 15:19:14,AprilTag,0,"Zone Alpha - Origin",31.3,18.1,64.6,6.73,-92,9.7
+2026-11-03 15:46:48,AprilTag,0,"Zone Alpha - Origin",27.4,20.5,68.9,6.42,-91,8.3

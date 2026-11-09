@@ -1,0 +1,12 @@
+[2026-11-03 15:18:49] AprilTag: ID 0 | Location: Zone Alpha - Origin
+    └─ Moisture: 22.2% | Temp: 22.4°C (72.3°F) | pH: 6.55
+    └─ LoRa Telemetry: RSSI=-95 dBm, SNR=9.8 dB (Freq: 915.0 MHz)
+----------------------------------------------------------------------
+[2026-11-03 15:19:14] AprilTag: ID 0 | Location: Zone Alpha - Origin
+    └─ Moisture: 31.3% | Temp: 18.1°C (64.6°F) | pH: 6.73
+    └─ LoRa Telemetry: RSSI=-92 dBm, SNR=9.7 dB (Freq: 915.0 MHz)
+----------------------------------------------------------------------
+[2026-11-03 15:46:48] AprilTag: ID 0 | Location: Zone Alpha - Origin
+    └─ Moisture: 27.4% | Temp: 20.5°C (68.9°F) | pH: 6.42
+    └─ LoRa Telemetry: RSSI=-91 dBm, SNR=8.3 dB (Freq: 915.0 MHz)
+----------------------------------------------------------------------

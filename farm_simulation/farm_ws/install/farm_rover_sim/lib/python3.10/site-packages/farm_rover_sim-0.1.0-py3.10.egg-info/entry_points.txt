@@ -1,0 +1,4 @@
+[console_scripts]
+base_station_node = farm_rover_sim.base_station_node:main
+rover_node = farm_rover_sim.rover_node:main
+

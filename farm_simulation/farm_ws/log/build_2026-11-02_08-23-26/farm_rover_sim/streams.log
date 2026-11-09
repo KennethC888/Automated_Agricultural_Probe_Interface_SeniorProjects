@@ -1,0 +1,45 @@
+[0.863s] Invoking command in '/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim': PYTHONPATH=/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages: /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build
+[1.078s] running develop
+[1.178s] Removing /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm-rover-sim.egg-link (link to .)
+[1.205s] Invoked command in '/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim' returned '0': PYTHONPATH=/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages: /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build
+[1.207s] Invoking command in '/home/kchan/AAPI/farm_simulation/farm_ws/src/farm_rover_sim': PYTHONPATH=/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages: /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/farm_rover_sim build --build-base /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build install --record /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/install.log --install-scripts $base/lib/farm_rover_sim --single-version-externally-managed install_data --force
+[1.377s] running egg_info
+[1.377s] writing ../../build/farm_rover_sim/farm_rover_sim.egg-info/PKG-INFO
+[1.378s] writing dependency_links to ../../build/farm_rover_sim/farm_rover_sim.egg-info/dependency_links.txt
+[1.378s] writing entry points to ../../build/farm_rover_sim/farm_rover_sim.egg-info/entry_points.txt
+[1.378s] writing requirements to ../../build/farm_rover_sim/farm_rover_sim.egg-info/requires.txt
+[1.378s] writing top-level names to ../../build/farm_rover_sim/farm_rover_sim.egg-info/top_level.txt
+[1.380s] reading manifest file '../../build/farm_rover_sim/farm_rover_sim.egg-info/SOURCES.txt'
+[1.382s] writing manifest file '../../build/farm_rover_sim/farm_rover_sim.egg-info/SOURCES.txt'
+[1.382s] running build
+[1.382s] running build_py
+[1.382s] creating /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build
+[1.382s] creating /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib
+[1.383s] creating /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+[1.383s] copying farm_rover_sim/rover_node.py -> /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+[1.384s] copying farm_rover_sim/__init__.py -> /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+[1.384s] copying farm_rover_sim/base_station_node.py -> /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+[1.384s] copying farm_rover_sim/farm_map.py -> /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim
+[1.385s] running install
+[1.385s] running install_lib
+[1.386s] creating /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+[1.387s] copying /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim/rover_node.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+[1.387s] copying /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim/__init__.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+[1.387s] copying /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim/base_station_node.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+[1.387s] copying /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build/lib/farm_rover_sim/farm_map.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim
+[1.387s] byte-compiling /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim/rover_node.py to rover_node.cpython-310.pyc
+[1.390s] byte-compiling /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim/__init__.py to __init__.cpython-310.pyc
+[1.390s] byte-compiling /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim/base_station_node.py to base_station_node.cpython-310.pyc
+[1.391s] byte-compiling /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim/farm_map.py to farm_map.cpython-310.pyc
+[1.391s] running install_data
+[1.392s] copying resource/farm_rover_sim -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/ament_index/resource_index/packages
+[1.394s] copying package.xml -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/farm_rover_sim
+[1.394s] copying launch/farm_sim.launch.py -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/farm_rover_sim/launch
+[1.396s] copying rviz/farm_view.rviz -> /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/share/farm_rover_sim/rviz
+[1.398s] running install_egg_info
+[1.400s] Copying ../../build/farm_rover_sim/farm_rover_sim.egg-info to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages/farm_rover_sim-0.1.0-py3.10.egg-info
+[1.402s] running install_scripts
+[1.422s] Installing base_station_node script to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/farm_rover_sim
+[1.422s] Installing rover_node script to /home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/farm_rover_sim
+[1.422s] writing list of installed files to '/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/install.log'
+[1.447s] Invoked command in '/home/kchan/AAPI/farm_simulation/farm_ws/src/farm_rover_sim' returned '0': PYTHONPATH=/home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/kchan/AAPI/farm_simulation/farm_ws/install/farm_rover_sim/lib/python3.10/site-packages: /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/farm_rover_sim build --build-base /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/build install --record /home/kchan/AAPI/farm_simulation/farm_ws/build/farm_rover_sim/install.log --install-scripts $base/lib/farm_rover_sim --single-version-externally-managed install_data --force
