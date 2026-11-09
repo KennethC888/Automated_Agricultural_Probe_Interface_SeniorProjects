@@ -52,9 +52,9 @@
         <div class="lg:col-span-8 flex flex-col space-y-4">
 
             <!-- Video & Canvas Viewport -->
-            <div class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl group flex justify-center items-center aspect-video min-h-[300px]">
+            <div class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex justify-center items-center aspect-video min-h-[300px]">
                 <video id="webcam-video" autoplay playsinline muted class="hidden"></video>
-                <canvas id="output-canvas" class="w-full h-full object-contain cursor-crosshair"></canvas>
+                <canvas id="output-canvas" class="w-full h-full object-contain"></canvas>
 
                 <div id="cam-placeholder" class="absolute inset-0 flex flex-col justify-center items-center bg-slate-900/95 text-slate-500 p-6 text-center">
                     <div class="w-16 h-16 rounded-full bg-slate-800/80 border border-slate-700 flex justify-center items-center mb-4 text-slate-400">
@@ -64,48 +64,12 @@
                     <p class="text-xs max-w-sm text-slate-400">Click <strong class="text-slate-200">Start Camera</strong> above to enable live AprilTag stream processing.</p>
                 </div>
 
-                <div id="flash-overlay" class="absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-300"></div>
-
-                <div class="absolute bottom-3 left-3 right-3 flex justify-between items-center bg-slate-950/80 backdrop-blur-md border border-slate-800/80 p-2 rounded-xl opacity-90 transition-opacity">
+                <div class="absolute bottom-3 left-3 right-3 flex items-center bg-slate-950/80 backdrop-blur-md border border-slate-800/80 p-2 rounded-xl opacity-90">
                     <div id="status-indicator" class="text-xs font-mono text-slate-400 px-2 flex items-center space-x-2">
                         <span class="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
                         <span id="status-text">Backend: Connecting...</span>
                     </div>
-                    <div class="flex space-x-2">
-                        <button id="snapshot-btn" title="Capture Snapshot" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 shadow-md shadow-indigo-900/30">
-                            <i class="fa-solid fa-camera"></i>
-                            <span>Snapshot</span>
-                        </button>
-                    </div>
                 </div>
-            </div>
-
-            <!-- Quick Mode Selector Tabs -->
-            <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
-                <button data-mode="apriltag" class="mode-tab active bg-indigo-600 text-white font-medium text-xs py-2.5 px-3 rounded-xl border border-indigo-500 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <i class="fa-solid fa-border-none"></i>
-                    <span>AprilTag</span>
-                </button>
-                <button data-mode="none" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <i class="fa-solid fa-eye"></i>
-                    <span>Passthrough</span>
-                </button>
-                <button data-mode="grayscale" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <i class="fa-solid fa-circle-half-stroke"></i>
-                    <span>Threshold</span>
-                </button>
-                <button data-mode="edge" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <i class="fa-solid fa-border-all"></i>
-                    <span>Sobel Edge</span>
-                </button>
-                <button data-mode="colortrack" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <i class="fa-solid fa-crosshairs"></i>
-                    <span>Color Track</span>
-                </button>
-                <button data-mode="motion" class="mode-tab bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 font-medium text-xs py-2.5 px-3 rounded-xl border border-slate-800 transition-all text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <i class="fa-solid fa-person-walking"></i>
-                    <span>Motion Detect</span>
-                </button>
             </div>
 
             <!-- LIVE ON-SCREEN SOIL PROBE TELEMETRY CARD -->
@@ -147,27 +111,25 @@
             </div>
         </div>
 
-        <!-- Right Column: CV Controls & AprilTag Settings -->
+        <!-- Right Column: AprilTag Settings -->
         <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-6 shadow-xl">
 
-            <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+            <div class="border-b border-slate-800 pb-3">
                 <h2 class="font-bold text-slate-200 text-sm tracking-wide uppercase flex items-center space-x-2">
-                    <i class="fa-solid fa-sliders text-indigo-400"></i>
-                    <span>Vision Controls</span>
+                    <i class="fa-solid fa-border-none text-indigo-400"></i>
+                    <span>AprilTag Detection</span>
                 </h2>
-                <button id="reset-params-btn" class="text-xs text-slate-400 hover:text-indigo-400 transition">Reset Default</button>
             </div>
 
-            <!-- Panel: AprilTag -->
-            <div id="param-panel-apriltag" class="param-panel space-y-4">
+            <div class="space-y-4">
                 <p class="text-xs text-slate-400">Detects <strong class="text-slate-200">tag36h11</strong> AprilTags. Shows ID, heading and estimated distance.</p>
                 <div id="april-status" class="text-xs font-mono text-slate-400">Library: loading...</div>
-                
+
                 <div class="space-y-1.5">
                     <label class="text-xs text-slate-300 font-medium">Physical tag size (cm, outer black edge)</label>
                     <input type="number" id="param-tag-size" value="10" min="1" step="0.5" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm">
                 </div>
-                
+
                 <div class="space-y-1.5">
                     <div class="flex justify-between text-xs">
                         <label class="text-slate-300 font-medium">Focal length (px, full size)</label>
@@ -188,91 +150,6 @@
                 <div id="tag-list" class="space-y-2 text-xs font-mono text-slate-300 max-h-48 overflow-y-auto"></div>
             </div>
 
-            <!-- Panel: Passthrough -->
-            <div id="param-panel-none" class="param-panel space-y-4 hidden">
-                <p class="text-xs text-slate-400">Showing clean camera feed. Adjust global pre-processing options below.</p>
-            </div>
-
-            <!-- Panel: Thresholding -->
-            <div id="param-panel-grayscale" class="param-panel space-y-4 hidden">
-                <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs">
-                        <label class="text-slate-300 font-medium">Binarization Threshold</label>
-                        <span id="val-threshold" class="text-indigo-400 font-mono">128</span>
-                    </div>
-                    <input type="range" id="param-threshold" min="0" max="255" value="128" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
-                </div>
-                <div class="flex items-center space-x-2 pt-2">
-                    <input type="checkbox" id="param-invert-thresh" class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-                    <label for="param-invert-thresh" class="text-xs text-slate-300">Invert Black/White</label>
-                </div>
-            </div>
-
-            <!-- Panel: Sobel Edge -->
-            <div id="param-panel-edge" class="param-panel space-y-4 hidden">
-                <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs">
-                        <label class="text-slate-300 font-medium">Sobel Cutoff Intensity</label>
-                        <span id="val-edge-cutoff" class="text-indigo-400 font-mono">50</span>
-                    </div>
-                    <input type="range" id="param-edge-cutoff" min="10" max="200" value="50" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
-                </div>
-            </div>
-
-            <!-- Panel: Color Tracker -->
-            <div id="param-panel-colortrack" class="param-panel space-y-4 hidden">
-                <div class="space-y-2">
-                    <label class="text-xs text-slate-300 font-medium block">Target Color</label>
-                    <div class="flex items-center space-x-3">
-                        <input type="color" id="param-target-color" value="#ef4444" class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer p-0.5">
-                        <span class="text-xs text-slate-400">Click on video canvas to pick target color directly!</span>
-                    </div>
-                </div>
-                <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs">
-                        <label class="text-slate-300 font-medium">Color Distance Tolerance</label>
-                        <span id="val-color-tolerance" class="text-indigo-400 font-mono">60</span>
-                    </div>
-                    <input type="range" id="param-color-tolerance" min="10" max="150" value="60" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
-                </div>
-            </div>
-
-            <!-- Panel: Motion Detection -->
-            <div id="param-panel-motion" class="param-panel space-y-4 hidden">
-                <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs">
-                        <label class="text-slate-300 font-medium">Motion Sensitivity</label>
-                        <span id="val-motion-sens" class="text-indigo-400 font-mono">35</span>
-                    </div>
-                    <input type="range" id="param-motion-sens" min="10" max="100" value="35" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
-                </div>
-                <div class="flex items-center space-x-2 pt-2">
-                    <input type="checkbox" id="param-motion-box" checked class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-                    <label for="param-motion-box" class="text-xs text-slate-300">Highlight Motion Box</label>
-                </div>
-            </div>
-
-            <!-- Performance Adjustments -->
-            <div class="border-t border-slate-800 pt-4 space-y-4">
-                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Performance Adjustments</h3>
-
-                <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs">
-                        <label class="text-slate-300">Downscale Scale (Speed vs Quality)</label>
-                        <span id="val-downscale" class="text-indigo-400 font-mono">1.0x</span>
-                    </div>
-                    <input type="range" id="param-downscale" min="0.25" max="1" step="0.25" value="1" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
-                </div>
-
-                <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs">
-                        <label class="text-slate-300">Pre-Blur (Noise Reduction)</label>
-                        <span id="val-blur" class="text-indigo-400 font-mono">0px</span>
-                    </div>
-                    <input type="range" id="param-blur" min="0" max="8" value="0" class="w-full accent-indigo-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
-                </div>
-            </div>
-
             <div class="bg-indigo-950/30 border border-indigo-800/40 rounded-xl p-3 text-xs text-indigo-300/80 leading-relaxed">
                 <i class="fa-solid fa-circle-info mr-1 text-indigo-400"></i>
                 AprilTag recognition runs 100% locally in browser. Telemetry & sensor probing logic runs over Python base station WebSocket.
@@ -288,21 +165,11 @@
         const state = {
             isCameraOn: false,
             currentFacingMode: 'user',
-            activeMode: 'apriltag',
             fps: 0,
             frameCount: 0,
             lastFpsUpdate: performance.now(),
-            previousFrameData: null,
-            targetRGB: [239, 68, 68],
             params: {
-                threshold: 128,
-                invertThresh: false,
-                edgeCutoff: 50,
-                colorTolerance: 60,
-                motionSensitivity: 35,
-                motionBox: true,
                 downscale: 1.0,
-                blur: 0,
                 tagSize: 10,
                 focal: 900,
                 hamming: 3
@@ -318,8 +185,6 @@
         const flipCamBtn = document.getElementById('flip-cam-btn');
         const fpsCounter = document.getElementById('fps-counter');
         const statusText = document.getElementById('status-text');
-        const snapshotBtn = document.getElementById('snapshot-btn');
-        const flashOverlay = document.getElementById('flash-overlay');
 
         const dispMoisture = document.getElementById('disp-moisture');
         const dispTemp = document.getElementById('disp-temp');
@@ -408,142 +273,11 @@
             try {
                 const w = canvas.width;
                 const h = canvas.height;
-
-                ctx.filter = state.params.blur > 0 ? `blur(${state.params.blur}px)` : 'none';
                 ctx.drawImage(video, 0, 0, w, h);
-                ctx.filter = 'none';
-
-                switch (state.activeMode) {
-                    case 'apriltag':
-                        processAprilTags(w, h);
-                        break;
-                    case 'grayscale': {
-                        const d = ctx.getImageData(0, 0, w, h);
-                        processThreshold(d);
-                        ctx.putImageData(d, 0, 0);
-                        break;
-                    }
-                    case 'edge': {
-                        const d = ctx.getImageData(0, 0, w, h);
-                        ctx.putImageData(processSobelEdge(d, w, h), 0, 0);
-                        break;
-                    }
-                    case 'colortrack': {
-                        const d = ctx.getImageData(0, 0, w, h);
-                        const trackedBox = processColorTracking(d, w, h);
-                        ctx.putImageData(d, 0, 0);
-                        if (trackedBox) drawBoundingBox(trackedBox, '#3b82f6', 'Target Object');
-                        break;
-                    }
-                    case 'motion': {
-                        const d = ctx.getImageData(0, 0, w, h);
-                        const motionBox = processMotionDetection(d, w, h);
-                        ctx.putImageData(d, 0, 0);
-                        if (motionBox && state.params.motionBox) drawBoundingBox(motionBox, '#ef4444', 'Motion');
-                        break;
-                    }
-                    case 'none':
-                    default:
-                        break;
-                }
+                processAprilTags(w, h);
             } catch (err) {
                 console.error(err);
             }
-        }
-
-        function processThreshold(imageData) {
-            const data = imageData.data;
-            const thresh = state.params.threshold;
-            const invert = state.params.invertThresh;
-            for (let i = 0; i < data.length; i += 4) {
-                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                let val = gray >= thresh ? 255 : 0;
-                if (invert) val = 255 - val;
-                data[i] = data[i + 1] = data[i + 2] = val;
-            }
-        }
-
-        function processSobelEdge(imageData, width, height) {
-            const src = imageData.data;
-            const output = ctx.createImageData(width, height);
-            const dst = output.data;
-            const cutoff = state.params.edgeCutoff;
-            const grayBuf = new Uint8Array(width * height);
-            for (let i = 0; i < src.length; i += 4) {
-                grayBuf[i / 4] = (src[i] * 0.299 + src[i + 1] * 0.587 + src[i + 2] * 0.114);
-            }
-            for (let y = 1; y < height - 1; y++) {
-                for (let x = 1; x < width - 1; x++) {
-                    const idx = y * width + x;
-                    const gx = -1 * grayBuf[idx - width - 1] + 1 * grayBuf[idx - width + 1] -
-                               2 * grayBuf[idx - 1]         + 2 * grayBuf[idx + 1] -
-                               1 * grayBuf[idx + width - 1] + 1 * grayBuf[idx + width + 1];
-                    const gy = -1 * grayBuf[idx - width - 1] - 2 * grayBuf[idx - width] - 1 * grayBuf[idx - width + 1] +
-                                1 * grayBuf[idx + width - 1] + 2 * grayBuf[idx + width] + 1 * grayBuf[idx + width + 1];
-                    const g = Math.sqrt(gx * gx + gy * gy);
-                    const pixIdx = idx * 4;
-                    const val = g > cutoff ? 255 : 0;
-                    dst[pixIdx] = dst[pixIdx + 1] = dst[pixIdx + 2] = val;
-                    dst[pixIdx + 3] = 255;
-                }
-            }
-            for (let i = 3; i < dst.length; i += 4) dst[i] = 255;
-            return output;
-        }
-
-        function processColorTracking(imageData, width, height) {
-            const data = imageData.data;
-            const [targetR, targetG, targetB] = state.targetRGB;
-            const tolSq = state.params.colorTolerance * state.params.colorTolerance;
-            let minX = width, maxX = 0, minY = height, maxY = 0, matchCount = 0;
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const i = (y * width + x) * 4;
-                    const distSq = (data[i] - targetR) ** 2 + (data[i + 1] - targetG) ** 2 + (data[i + 2] - targetB) ** 2;
-                    if (distSq < tolSq) {
-                        matchCount++;
-                        if (x < minX) minX = x;
-                        if (x > maxX) maxX = x;
-                        if (y < minY) minY = y;
-                        if (y > maxY) maxY = y;
-                    }
-                }
-            }
-            return matchCount > 30 ? { minX, maxX, minY, maxY } : null;
-        }
-
-        function processMotionDetection(imageData, width, height) {
-            const data = imageData.data;
-            if (!state.previousFrameData || state.previousFrameData.length !== data.length) {
-                state.previousFrameData = new Uint8ClampedArray(data);
-                return null;
-            }
-            const prev = state.previousFrameData;
-            let minX = width, maxX = 0, minY = height, maxY = 0, motionPixels = 0;
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const i = (y * width + x) * 4;
-                    const avgDiff = (Math.abs(data[i] - prev[i]) + Math.abs(data[i + 1] - prev[i + 1]) + Math.abs(data[i + 2] - prev[i + 2])) / 3;
-                    if (avgDiff > state.params.motionSensitivity) {
-                        motionPixels++;
-                        if (x < minX) minX = x;
-                        if (x > maxX) maxX = x;
-                        if (y < minY) minY = y;
-                        if (y > maxY) maxY = y;
-                    }
-                }
-            }
-            state.previousFrameData.set(data);
-            return motionPixels > 50 ? { minX, maxX, minY, maxY } : null;
-        }
-
-        function drawBoundingBox(box, color, label) {
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(box.minX, box.minY, box.maxX - box.minX, box.maxY - box.minY);
-            ctx.fillStyle = color;
-            ctx.font = '12px sans-serif';
-            ctx.fillText(label, box.minX, Math.max(box.minY - 5, 12));
         }
 
         // =====================================================================
@@ -718,7 +452,7 @@
 
                     probeStatusPill.className = "text-xs px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-600 text-emerald-300 font-mono animate-pulse";
                     probeStatusPill.textContent = `Probed Tag ${msg.tag_id} (LoRa Rx OK)`;
-                    
+
                     setTimeout(() => {
                         probeStatusPill.className = "text-xs px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400 font-mono";
                         probeStatusPill.textContent = "Awaiting AprilTag Target...";
@@ -765,27 +499,6 @@
             if (state.isCameraOn) { stopCamera(); startCamera(); }
         });
 
-        const modeTabs = document.querySelectorAll('.mode-tab');
-        const paramPanels = document.querySelectorAll('.param-panel');
-        modeTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const selectedMode = tab.getAttribute('data-mode');
-                state.activeMode = selectedMode;
-                modeTabs.forEach(t => {
-                    t.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-500');
-                    t.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-800');
-                });
-                tab.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-800');
-                tab.classList.add('bg-indigo-600', 'text-white', 'border-indigo-500');
-
-                paramPanels.forEach(panel => panel.classList.add('hidden'));
-                const p = document.getElementById(`param-panel-${selectedMode}`);
-                if (p) p.classList.remove('hidden');
-
-                if (selectedMode === 'apriltag') loadAprilLibrary();
-            });
-        });
-
         document.getElementById('param-tag-size').addEventListener('input', (e) => state.params.tagSize = parseFloat(e.target.value) || 10);
         document.getElementById('param-focal').addEventListener('input', (e) => {
             state.params.focal = parseInt(e.target.value);
@@ -795,15 +508,6 @@
             state.params.hamming = parseInt(e.target.value);
             document.getElementById('val-hamming').textContent = e.target.value;
             aprilDetector = null;
-        });
-        document.getElementById('param-downscale').addEventListener('input', (e) => {
-            state.params.downscale = parseFloat(e.target.value);
-            document.getElementById('val-downscale').textContent = `${e.target.value}x`;
-            resizeCanvas();
-        });
-        document.getElementById('param-blur').addEventListener('input', (e) => {
-            state.params.blur = parseInt(e.target.value);
-            document.getElementById('val-blur').textContent = `${e.target.value}px`;
         });
 
         loadAprilLibrary();
